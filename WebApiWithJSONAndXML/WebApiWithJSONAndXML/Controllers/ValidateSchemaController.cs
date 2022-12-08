@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Swashbuckle.Swagger.Annotations;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -25,6 +26,9 @@ namespace WebApiWithJSONAndXML.Controllers
 
         [SwaggerConsumes("application/xml", "application/json")]
         [SwaggerProduces("application/xml", "application/json")]
+        [SwaggerResponse(HttpStatusCode.OK, "Response to Valid Request", typeof(ValidationResponse))]
+        [SwaggerResponse(HttpStatusCode.BadRequest, "Response to Bad Request", typeof(Error))]
+        [SwaggerResponse(HttpStatusCode.InternalServerError, "Response to Internal Server Error", typeof(Error))]
         public IHttpActionResult Post(ValidationRequest request)
         {
             try

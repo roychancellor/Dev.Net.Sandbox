@@ -46,6 +46,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ErrorResponse.cs" />
     <Compile Include="ValidationFinding.cs" />
     <Compile Include="ValidationRequest.cs" />
     <Compile Include="ValidationResponse.cs" />
