@@ -1,0 +1,7 @@
+{
+    "MessageKey":"DQ",
+    "MessageBody":"VALID message body",
+    "HeaderFormat":"HEADER",
+    "BodyFormat":"BODY",
+    "InboundCorrelationID":"1234567890JSON"
+}

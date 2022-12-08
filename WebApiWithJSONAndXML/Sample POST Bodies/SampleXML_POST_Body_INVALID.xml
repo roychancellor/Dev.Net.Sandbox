@@ -1,0 +1,7 @@
+<ValidationRequest>
+	<MessageKey>DQ</MessageKey>
+	<MessageBody>INVALID message body</MessageBody>
+	<HeaderFormat>HEADER</HeaderFormat>
+	<BodyFormat>BODY</BodyFormat>
+    <InboundCorrelationID>1234567890XML</InboundCorrelationID>
+</ValidationRequest>
