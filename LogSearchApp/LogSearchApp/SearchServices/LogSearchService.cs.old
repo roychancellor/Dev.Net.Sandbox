@@ -1,0 +1,118 @@
+﻿using Microsoft.Extensions.Options;
+using System.Text.Json;
+using LogSearchApp.Models;
+using NLog;
+using LogSearchApp.DataContracts;
+
+namespace LogSearchApp.SearchServices
+{
+    public class LogSearchService
+    {
+        private static readonly Logger _log = LogManager.GetCurrentClassLogger();
+        private readonly string _logFileDirectory;
+        private readonly int _maxResults;
+
+        public LogSearchService(IOptionsMonitor<LogSearchSettings> options)
+        {
+            _logFileDirectory = options.CurrentValue.LogFileDirectory;
+            _maxResults = options.CurrentValue.MaxResults;
+        }
+
+        public async Task<List<LogSearchResult>> SearchAsync(LogSearchRequest request)
+        {
+            var results = new List<LogSearchResult>();
+            var logFiles = Directory.GetFiles(_logFileDirectory, "*.json", SearchOption.AllDirectories);
+
+            foreach (var logFile in logFiles)
+            {
+                var lines = await File.ReadAllLinesAsync(logFile);
+                foreach (var line in lines)
+                {
+                    try
+                    {
+                        var logEntry = JsonSerializer.Deserialize<LogEntry>(line);
+                        if (logEntry == null) continue;
+
+                        bool foundMatches = true;
+                        if (request.StartDate.HasValue && logEntry.Timestamp < request.StartDate.Value)
+                        {
+                            foundMatches = false;
+                        }
+                        if (request.EndDate.HasValue && logEntry.Timestamp > request.EndDate.Value)
+                        {
+                            foundMatches = false;
+                        }
+                        if (!string.IsNullOrEmpty(request.Keyword) && !logEntry.Message.Contains(request.Keyword))
+                        {
+                            foundMatches = false;
+                        }
+                        if (!string.IsNullOrEmpty(request.Field) && !string.IsNullOrEmpty(request.Value))
+                        {
+                            var property = logEntry.GetType().GetProperty(request.Field);
+                            if (property == null || !property.GetValue(logEntry)?.ToString()?.Contains(request.Value) == true)
+                            {
+                                foundMatches = false;
+                            }
+                        }
+
+                        if (foundMatches)
+                        {
+                            results.Add(new LogSearchResult
+                            {
+                                Id = logEntry.Id,
+                                Message = logEntry.Message,
+                                Timestamp = logEntry.Timestamp
+                            });
+
+                            if (results.Count >= _maxResults)
+                            {
+                                return results;
+                            }
+                        }
+                    }
+                    catch (JsonException jex)
+                    {
+                        _log.Error(jex, $"While searching log files - JSON exception thrown");
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.Error(ex, $"While searching log files - exception thrown");
+                    }
+                }
+            }
+
+            return results;
+        }
+
+        public async Task<LogEntry?> GetEntryByIdAsync(string id)
+        {
+            var logFiles = Directory.GetFiles(_logFileDirectory, "*.json", SearchOption.AllDirectories);
+
+            foreach (var logFile in logFiles)
+            {
+                var lines = await File.ReadAllLinesAsync(logFile);
+                foreach (var line in lines)
+                {
+                    try
+                    {
+                        var logEntry = JsonSerializer.Deserialize<LogEntry>(line);
+                        if (logEntry?.Id == id)
+                        {
+                            return logEntry;
+                        }
+                    }
+                    catch (JsonException jex)
+                    {
+                        _log.Error(jex, $"While searching log files by ID - JSON exception thrown | ID: {id}");
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.Error(ex, $"While searching log files by ID - exception thrown | ID: {id}");
+                    }
+                }
+            }
+
+            return null;
+        }
+    }
+}

@@ -1,0 +1,16 @@
+<TransactionalWrapper>
+    <InboundCorrelationID>1234567890XML</InboundCorrelationID>
+    <ProcessResults>
+		<ProcessResult>01:IO Interface TRANS</ProcessResult>
+		<ProcessResult>02:Request Manager</ProcessResult>
+		<ProcessResult>03:PO</ProcessResult>
+		<ProcessResult>04:Router Dest</ProcessResult>
+		<ProcessResult>05:Router Route</ProcessResult>
+		<ProcessResult>06:Image Processor</ProcessResult>
+		<ProcessResult>07:Conversion</ProcessResult>
+		<ProcessResult>08:Sender Manager</ProcessResult>
+		<ProcessResult>09:Archive</ProcessResult>
+		<ProcessResult>10:IO Interface DELCONF</ProcessResult>
+		<ProcessResult>11:Delivery Confirmation</ProcessResult>
+	</ProcessResults>
+</TransactionalWrapper>

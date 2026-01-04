@@ -1,0 +1,5 @@
+﻿{"Message":"FileA67-Entry1,ABC1","Timestamp":"2025-04-30T10:52:00.0000000Z","Level":"INFO","Id":"IBCID1234-B67-1","User":"USR123"}
+{"Message":"FileA67-Entry2,ABC2","Timestamp":"2025-04-30T10:54:00.0000000Z","Level":"INFO","Id":"IBCID1234-B67-2","User":"USR123"}
+{"Message":"FileA67-Entry3,ABC3","Timestamp":"2025-04-30T10:56:00.0000000Z","Level":"INFO","Id":"IBCID1234-B67-3","User":"USR123"}
+{"Message":"FileA67-Entry4,ABC4","Timestamp":"2025-04-30T10:58:00.0000000Z","Level":"INFO","Id":"IBCID1234-B67-4","User":"USR123"}
+{"Message":"FileA67-Entry5,ABC5","Timestamp":"2025-04-30T11:00:00.0000000Z","Level":"INFO","Id":"IBCID1234-B67-5","User":"USR123"}

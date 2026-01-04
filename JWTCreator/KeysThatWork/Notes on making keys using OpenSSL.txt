@@ -1,0 +1,27 @@
+On AZ01ISDS, in a command window, go to W:\Roy Chancellor\dev.ssl
+
+MAKE A PUBLIC KEY FROM A PRIVATE KEY:
+openssl rsa -in "W:\Roy Chancellor\dev.ssl\<<name of private key.pem>>>" -outform PEM -pubout -out "W:\Roy Chancellor\dev.ssl\key.public_pkcs8.pem"
+
+TO MAKE IT IN PKCS1 FORMAT (ENDS UP BEING THE SAME AS ABOVE)
+openssl rsa -in "W:\Roy Chancellor\dev.ssl\key2048_sqa.private_open_pkcs8.pem" -outform PEM -pubout -traditional -out "W:\Roy Chancellor\dev.ssl\key.public_pkcs1.pem"
+
+IF THE PRIVATE KEY HAS A PASS PHRASE:
+openssl rsa -in "W:\Roy Chancellor\dev.ssl\key2048_sqa.private.pem" -passin file:"W:\Roy Chancellor\dev.ssl\passphrase.txt" -outform PEM -pubout -out "W:\Roy Chancellor\dev.ssl\key.public.privatehadpassword.pem"
+
+TO CONVERT PRIVATE KEY TO PKCS8 FORMAT:
+openssl pkcs8 -topk8 -inform PEM -outform PEM -nocrypt -in "W:\Roy Chancellor\dev.ssl\key2048_sqa.private_open.pem" -out "W:\Roy Chancellor\dev.ssl\key2048_sqa.private_open_pkcs8.pem"
+
+
+********* ADDED 2023-07-15 **********
+THIS USES THE INTRADO-SUPPLIED PRIVATE KEY (formerly named key2048_sqa.private.pem; now named intrado.private.pwp.pem). USES THE PASSPHRASE FILE intradopassphrase.txt.
+START WITH THIS PRIVATE KEY BECAUSE IT IS WHAT THEIR TEST SYSTEM RECOGNIZES!!!!!
+
+CONVERT PASSWORD PROTECTED PRIVATE KEY TO NOT PROTECTED TO BE ABLE TO USE WITH JWT DEBUGGER: (need to enter the passphrase --> verysecret)
+openssl rsa -in "c:\dev.net\intrado.private.pwp.pem" -out "c:\dev.net\intrado.private.open.pem"
+
+EXTRACT PUBLIC KEY FROM PASSWORD PROTECTED PEM:
+openssl rsa -in "c:\dev.net\intrado.private.pwp.pem" -passin file:"c:\dev.net\intradopassphrase.txt" -outform PEM -pubout -out "c:\dev.net\intrado.public.pem"
+
+EXTRACT PUBLIC KEY FROM OPEN PEM:
+openssl rsa -in "c:\dev.net\intrado.private.open.pem" -outform PEM -pubout -out "c:\dev.net\intrado.public.pem"

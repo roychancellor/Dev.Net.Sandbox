@@ -1,0 +1,94 @@
+﻿body {
+    font-family: sans-serif;
+    margin: 20px;
+}
+
+#dashboard {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
+    grid-auto-rows: auto;
+    gap: 16px;
+    margin-top: 20px;
+}
+
+.app-block {
+    border-radius: 8px;
+    padding: 16px;
+    /* Remove fixed width to allow grid to control sizing */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    /* Each block spans 1 column */
+    grid-column: span 1;
+}
+
+/* Invisible spacer blocks for layout */
+.spacer {
+    visibility: hidden;
+}
+
+.Healthy {
+    background-color: #d4edda;
+    border-left: 6px solid #28a745;
+}
+
+.Degraded {
+    background-color: #fff3cd;
+    border-left: 6px solid #ffc107;
+}
+
+.Unhealthy {
+    background-color: #f8d7da;
+    border-left: 6px solid #dc3545;
+}
+
+.UNREACHABLE {
+    background-color: #000000;
+    border-left: 6px solid #FFFFFF;
+    color: white;
+}
+
+.app-block h2 {
+    margin: 0 0 8px;
+}
+
+.json-output {
+    background-color: #f1f1f1;
+    color: black; /* override inherited white text */
+    margin-top: 10px;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 0.85em;
+    white-space: pre-wrap;
+    display: none;
+}
+
+#refresh-btn {
+    background-color: #007bff;
+    border: none;
+    color: white;
+    padding: 10px 24px;
+    font-size: 1rem;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 123, 255, 0.3);
+    transition: background-color 0.3s ease, box-shadow 0.3s ease, transform 0.15s ease;
+    user-select: none;
+}
+
+    #refresh-btn:hover {
+        background-color: #0056b3;
+        box-shadow: 0 6px 12px rgba(0, 86, 179, 0.5);
+        transform: translateY(-2px);
+    }
+
+    #refresh-btn:active {
+        background-color: #004085;
+        box-shadow: 0 2px 5px rgba(0, 64, 133, 0.7);
+        transform: translateY(0);
+    }
+
+    #refresh-btn:focus {
+        outline: 3px solid #80bdff;
+        outline-offset: 2px;
+    }
+

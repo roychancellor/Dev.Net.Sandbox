@@ -1,0 +1,97 @@
+{
+	"info": {
+		"_postman_id": "a515cecc-df5c-43f1-b38c-db880e44c303",
+		"name": "NJIN Simulator",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "POST NSB.IN XML",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept": true,
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/xml",
+						"type": "default"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/xml",
+						"type": "default"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<TransactionalWrapper>\r\n    <Verbose>true</Verbose>\r\n    <InboundCorrelationID>1234567890XML</InboundCorrelationID>\r\n    <ProcessResults>\r\n\t\t<ProcessResult>01:IO Interface</ProcessResult>\r\n\t\t<ProcessResult>02:Request Manager</ProcessResult>\r\n\t\t<ProcessResult>03:PO</ProcessResult>\r\n\t\t<ProcessResult>04:Router Dest</ProcessResult>\r\n\t\t<ProcessResult>05:Router Route</ProcessResult>\r\n\t\t<ProcessResult>06:Image Processor</ProcessResult>\r\n\t\t<ProcessResult>07:Conversion</ProcessResult>\r\n\t\t<ProcessResult>08:Sender Manager</ProcessResult>\r\n\t</ProcessResults>\r\n</TransactionalWrapper>"
+				},
+				"url": {
+					"raw": "http://localhost:9199/njinsimulator/io/api/v1/NSBIn",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9199",
+					"path": [
+						"njinsimulator",
+						"io",
+						"api",
+						"v1",
+						"NSBIn"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "POST NJIN IO Interface XML",
+			"protocolProfileBehavior": {
+				"disabledSystemHeaders": {
+					"accept": true,
+					"content-type": true
+				}
+			},
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "application/xml",
+						"type": "default"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/xml",
+						"type": "default"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "<TransactionalWrapper>\r\n    <Verbose>true</Verbose>\r\n    <InboundCorrelationID>1234567890XML</InboundCorrelationID>\r\n</TransactionalWrapper>"
+				},
+				"url": {
+					"raw": "http://localhost:9199/njinsimulator/io/api/v1/IOInterface",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "9199",
+					"path": [
+						"njinsimulator",
+						"io",
+						"api",
+						"v1",
+						"IOInterface"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

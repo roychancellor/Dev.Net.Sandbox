@@ -1,0 +1,68 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Log Search</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="/favicon/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div class="container">
+        <h1>Log Search</h1>
+
+        <div class="search-form">
+            <input type="text" id="keyword" placeholder="Enter keyword..." />
+            <select id="field">
+                <option value="">All Fields</option>
+                <option value="Id">ID</option>
+                <option value="Message">Message</option>
+                <option value="Timestamp">Timestamp</option>
+            </select>
+            <select id="timeRange">
+                <option value="allTime">All Time</option>
+                <option value="last15">Last 15 Minutes</option>
+                <option value="last30">Last 30 Minutes</option>
+                <option value="last1Hour">Last Hour</option>
+                <option value="last3Hours">Last 3 Hours</option>
+                <option value="last6Hours">Last 6 Hours</option>
+                <option value="last12Hours">Last 12 Hours</option>
+                <option value="last24Hours">Last 24 Hours</option>
+                <option value="last2Days">Last 2 Days</option>
+                <option value="last7Days">Last 7 Days</option>
+                <option value="custom">Custom</option>
+            </select>
+
+            <!-- Custom date input fields -->
+            <div id="customDateFields" class="hidden">
+                <input type="datetime-local" id="startDate" class="custom-datetime" />
+                <input type="datetime-local" id="endDate" class="custom-datetime" />
+            </div>
+
+            <button id="searchBtn">Search</button>
+        </div>
+
+        <ul id="resultsList"></ul>
+
+        <div id="logDetails" class="hidden">
+            <h2>Log Entry Details</h2>
+            <pre id="logDetailsContent"></pre>
+            <button id="closeDetailsBtn">Close</button>
+            <button id="copyDetailsBtn">Copy</button>
+        </div>
+    </div>
+
+    <script src="/js/script.js"></script>
+    <script>
+        // This will show/hide the custom date fields based on the selected time range
+        document.getElementById('timeRange').addEventListener('change', function () {
+            const customFields = document.getElementById('customDateFields');
+            if (this.value === 'custom') {
+                customFields.classList.remove('hidden');
+            } else {
+                customFields.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

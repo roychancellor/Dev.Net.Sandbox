@@ -1,0 +1,38 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Log Search</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" href="/favicon/favicon.ico" type="image/x-icon">
+</head>
+<body>
+    <div class="container">
+        <h1>Log Search</h1>
+
+        <div class="search-form">
+            <input type="text" id="keyword" placeholder="Enter keyword to search">
+
+            <label for="startDate">Start Date:</label>
+            <input type="datetime-local" id="startDate">
+
+            <label for="endDate">End Date:</label>
+            <input type="datetime-local" id="endDate">
+
+            <button id="searchBtn">Search</button>
+        </div>
+
+        <h2>Results</h2>
+        <ul id="resultsList"></ul>
+
+        <div id="logDetails" class="hidden">
+            <h3>Log Entry Details</h3>
+            <pre id="logDetailsContent"></pre>
+            <button id="closeDetailsBtn">Close</button>
+        </div>
+    </div>
+
+    <script src="/js/script.js"></script>
+</body>
+</html>

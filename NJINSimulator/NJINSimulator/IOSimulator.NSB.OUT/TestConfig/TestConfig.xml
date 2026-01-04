@@ -1,0 +1,6 @@
+<TestConfiguration>
+	<NumberOfTests>100</NumberOfTests>
+	<DelayBetweenTestsMS>10</DelayBetweenTestsMS>
+	<VerboseTW>false</VerboseTW>
+	<InboundCorrelationIdBase>IBCID_</InboundCorrelationIdBase>
+</TestConfiguration>

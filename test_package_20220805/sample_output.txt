@@ -1,0 +1,20 @@
+#./edb_test_SQA.py -v -q2
+----- JWT -----
+JWT: eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiI0NDQwMDA0MDAwIiwiaWF0IjoxNjU5NjIxMDIxLCJleHAiOjE2NTk2MjQ2MjEsImF1dGhvcml0aWVzIjpbIlJPTEVfU0VBUkNIIl0sIm9yZ0lkIjoiNDQ0MDAwNDAwMCIsInVzZXJfbmFtZSI6InRlc3RzY3JpcHQifQ.Tcsa5deg9_CjiJJp5C39Ec1lzXKdedY1PMsJbeFsKNu3UXmiM-eN6R8-IQPuEhQhhDfqjgklM75ES8UhoShXI34yUg7BMWJFfj6tFFtaDQFd3GK3n46ORIGi3Q8u8ciYSiyhj1CPDyW9oM8IywN6uiIqklSN_o-2NGmUqClD1FtvxKAXup6KrqujTq-zg8BzJM5JPIYdw44r4JyJL4AebjeVw-Zs2AGsn4lAPly0jyTAvcPnbrzRJWnxFIiTnf0JZ8FjH_2evtGdLlSpGtwDUvCEyEVRtGiA_Rh2HmcchbLHxsUTloTGbSe1m4IPpMNWPvZZp85EiERl_P84otOmSg
+----- initiateSearch request -----
+url: https://broker.sqa.powerdata.west.com/v1/initiate-search
+headers: {'Authorization': 'Bearer eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJpc3MiOiI0NDQwMDA0MDAwIiwiaWF0IjoxNjU5NjIxMDIxLCJleHAiOjE2NTk2MjQ2MjEsImF1dGhvcml0aWVzIjpbIlJPTEVfU0VBUkNIIl0sIm9yZ0lkIjoiNDQ0MDAwNDAwMCIsInVzZXJfbmFtZSI6InRlc3RzY3JpcHQifQ.Tcsa5deg9_CjiJJp5C39Ec1lzXKdedY1PMsJbeFsKNu3UXmiM-eN6R8-IQPuEhQhhDfqjgklM75ES8UhoShXI34yUg7BMWJFfj6tFFtaDQFd3GK3n46ORIGi3Q8u8ciYSiyhj1CPDyW9oM8IywN6uiIqklSN_o-2NGmUqClD1FtvxKAXup6KrqujTq-zg8BzJM5JPIYdw44r4JyJL4AebjeVw-Zs2AGsn4lAPly0jyTAvcPnbrzRJWnxFIiTnf0JZ8FjH_2evtGdLlSpGtwDUvCEyEVRtGiA_Rh2HmcchbLHxsUTloTGbSe1m4IPpMNWPvZZp85EiERl_P84otOmSg', 'IncidentId': '1659621021', 'Content-Type': 'application/json'}
+data: {'phone': '7203793562', 'searchTypes': ['Commercial Phone']}
+----- initiateSearch response -----
+status code: 200
+headers: {'Date': 'Thu, 04 Aug 2022 13:50:22 GMT', 'Content-Type': 'text/plain;charset=UTF-8', 'Content-Length': '20', 'Connection': 'keep-alive', 'Vary': 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers', 'X-Content-Type-Options': 'nosniff', 'X-XSS-Protection': '1; mode=block', 'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate', 'Pragma': 'no-cache', 'Expires': '0', 'Strict-Transport-Security': 'max-age=31536000 ; includeSubDomains', 'X-Frame-Options': 'DENY'}
+body: https://c91.us/90xzf
+Security Word: 90xzf
+----- retrieveData response -----
+status code: 200
+headers: {'Date': 'Thu, 04 Aug 2022 13:50:28 GMT', 'Content-Type': 'text/event-stream', 'Transfer-Encoding': 'chunked', 'Connection': 'keep-alive', 'Vary': 'Origin, Access-Control-Request-Method, Access-Control-Request-Headers', 'X-Content-Type-Options': 'nosniff', 'X-XSS-Protection': '1; mode=block', 'Cache-Control': 'no-cache, no-store, max-age=0, must-revalidate', 'Pragma': 'no-cache', 'Expires': '0', 'Strict-Transport-Security': 'max-age=31536000 ; includeSubDomains', 'X-Frame-Options': 'DENY'}
+writing to file results_1659621021
+terminating
+----- terminateCall response -----
+status code: 200
+

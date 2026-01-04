@@ -1,0 +1,7 @@
+@LogSearchApp_HostAddress = http://localhost:5082
+
+POST {{LogSearchApp_HostAddress}}/api/logs/search
+Accept: application/json
+###
+
+GET {{LogSearchApp_HostAddress}}/api/logs/IBCID1234-1
