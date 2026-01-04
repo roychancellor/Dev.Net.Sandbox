@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Royware.Apps.TransactionClassifier.Providers
+namespace Royware.Apps.TransactionClassifier.Providers.ApplicationSettings
 {
     public class AppSettingsProvider
     {

@@ -2,8 +2,8 @@
 using NLog;
 using Royware.Apps.TransactionClassifier.Logging;
 using Royware.Apps.TransactionClassifier.Processor;
-using Royware.Apps.TransactionClassifier.Providers;
 using Royware.Apps.TransactionClassifier.AppStartup;
+using Royware.Apps.TransactionClassifier.Providers.ApplicationSettings;
 
 namespace Royware.Apps.TransactionClassifier
 {

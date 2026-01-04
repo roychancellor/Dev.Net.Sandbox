@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Options;
 using NLog;
 using Royware.Apps.TransactionClassifier.Logging;
-using Royware.Apps.TransactionClassifier.Providers;
+using Royware.Apps.TransactionClassifier.Providers.ApplicationSettings;
 
 namespace Royware.Apps.TransactionClassifier.Processor
 {

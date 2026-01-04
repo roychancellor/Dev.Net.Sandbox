@@ -1,4 +1,4 @@
-﻿namespace Royware.Apps.TransactionClassifier.Providers
+﻿namespace Royware.Apps.TransactionClassifier.Providers.ApplicationSettings
 {
     public sealed class AppSettings
     {
