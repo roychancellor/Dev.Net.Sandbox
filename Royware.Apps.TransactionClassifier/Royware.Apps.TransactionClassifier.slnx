@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Royware.Apps.TransactionClassifier.Logging/Royware.Apps.TransactionClassifier.Logging.csproj" Id="1b5ada11-824b-4e57-9ca5-4d5acefc0526" />
+  <Project Path="Royware.Apps.TransactionClassifier.Processor/Royware.Apps.TransactionClassifier.Processor.csproj" Id="4f0c9cb4-ae81-4992-9882-e85408cfe19d" />
+  <Project Path="Royware.Apps.TransactionClassifier.Providers/Royware.Apps.TransactionClassifier.Providers.csproj" Id="4661a8ca-ffaa-4f08-b876-ea00a4726cae" />
+  <Project Path="Royware.Apps.TransactionClassifier/Royware.Apps.TransactionClassifier.csproj" />
+</Solution>

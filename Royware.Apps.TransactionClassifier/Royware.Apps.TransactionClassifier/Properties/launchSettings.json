@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "Royware.Apps.TransactionClassifier": {
+      "commandName": "Project"
+    },
+    "Container (Dockerfile)": {
+      "commandName": "Docker"
+    }
+  }
+}
