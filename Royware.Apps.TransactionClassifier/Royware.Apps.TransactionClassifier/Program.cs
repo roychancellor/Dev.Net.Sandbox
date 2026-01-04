@@ -1,9 +1,9 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using Royware.Apps.TransactionClassifier.Logging;
 using Royware.Apps.TransactionClassifier.Processor;
 using Royware.Apps.TransactionClassifier.Providers;
+using Royware.Apps.TransactionClassifier.AppStartup;
 
 namespace Royware.Apps.TransactionClassifier
 {
@@ -13,35 +13,38 @@ namespace Royware.Apps.TransactionClassifier
         
         static async Task Main(string[] args)
         {
-            IConfiguration configuration;
             try
             {
-                configuration = AppSettingsProvider.Bind("appsettings.json")
-                              ?? throw new InvalidOperationException("AppSettings section is missing or invalid."); ;
+                Loggers.Validate();
+
+                Startup.LogApplicationAction(_appLog, "Transactify", ApplicationActions.Starting);
+                
+                var services = new ServiceCollection();
+
+                _appLog.Info($"Binding appsettings");
+                AppSettingsProvider.Bind(services, "appsettings.json");
+
+                _appLog.Info($"Configuring dependencies");
+                Startup.ConfigureDependencies(services);
+
+                _appLog.Info($"Building service provider");
+                var serviceProvider = services.BuildServiceProvider();
+
+                _appLog.Info($"Getting transaction processor service from DI container");
+                var app = serviceProvider.GetRequiredService<TransactionProcessor>();
+
+                _appLog.Info($"Starting transaction processor application");
+                Console.WriteLine("Transaction Classifier! STARTING BATCH...");
+                
+                await app.ProcessAsync();
+
+                Startup.LogApplicationAction(_appLog, "Transactify", ApplicationActions.Finished);
             }
             catch (Exception ex)
             {
-                _appLog.Fatal($"Unable to bind configuration from appsettings.json | MESSAGE: {ex.Message}");
+                _appLog.Fatal($"Fatal exception thrown | MESSAGE: {ex.Message}");
                 return;
             }
-            
-            var services = new ServiceCollection();
-
-            services.Configure<AppSettings>(configuration);
-
-            // App services
-            services.AddSingleton<App>();
-            services.AddSingleton<TransactionProcessor>();
-            //services.AddSingleton<OpenAiClientWrapper>();
-
-            var provider = services.BuildServiceProvider();
-
-            var app = provider.GetRequiredService<App>();
-
-            Console.WriteLine("Transaction Classifier! STARTING BATCH...");
-            await app.RunAsync();
-            Console.WriteLine("BATCH COMPLETE! Press any key to finish.");
-            Console.ReadKey();
         }
     }
 }
