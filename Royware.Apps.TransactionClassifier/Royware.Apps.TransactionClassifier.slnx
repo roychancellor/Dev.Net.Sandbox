@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/Tests/">
+    <Project Path="Royware.Apps.TransactionClassifier.Tests/Royware.Apps.TransactionClassifier.Tests.csproj" Id="79cd41dd-d0f2-401d-a787-c3232b92a39f" />
+  </Folder>
   <Project Path="Royware.Apps.TransactionClassifier.Logging/Royware.Apps.TransactionClassifier.Logging.csproj" Id="1b5ada11-824b-4e57-9ca5-4d5acefc0526" />
   <Project Path="Royware.Apps.TransactionClassifier.Processor.Models/Royware.Apps.TransactionClassifier.Processor.Models.csproj" Id="d985d42e-87dc-40ae-bd0d-b3305d9a9314" />
   <Project Path="Royware.Apps.TransactionClassifier.Processor/Royware.Apps.TransactionClassifier.Processor.csproj" Id="4f0c9cb4-ae81-4992-9882-e85408cfe19d" />

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using NLog;
 using Royware.Apps.TransactionClassifier.Processor;
+using Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions;
 
 namespace Royware.Apps.TransactionClassifier.AppStartup
 {
@@ -9,7 +10,7 @@ namespace Royware.Apps.TransactionClassifier.AppStartup
         public static void ConfigureDependencies(ServiceCollection services)
         {
             services.AddSingleton<TransactionProcessor>();
-            //services.AddSingleton<OpenAiClientWrapper>();
+            services.AddSingleton<ITransactionReader, WellsFargoTransactionReader>();
         }
 
         public static void LogApplicationAction(Logger log, string appName, ApplicationActions action)

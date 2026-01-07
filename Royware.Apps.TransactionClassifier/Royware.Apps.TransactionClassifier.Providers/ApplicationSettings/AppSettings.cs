@@ -6,6 +6,7 @@
         public string Model { get; set; } = default!;
         public int BatchSize { get; set; }
         public double ConfidenceThreshold { get; set; }
+        public string FullPathToTransactionsFile { get; set; } = "";
         public string DbConnString { get; set; } = "";
         public string ProcInsertSingleTransaction { get; set; } = "";
         public string ProcGetUnresolvedTransactions { get; set; } = "";

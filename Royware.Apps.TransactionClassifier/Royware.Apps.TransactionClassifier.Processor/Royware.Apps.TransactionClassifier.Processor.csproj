@@ -18,11 +18,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Royware.Apps.TransactionClassifier.Logging\Royware.Apps.TransactionClassifier.Logging.csproj" />
+    <ProjectReference Include="..\Royware.Apps.TransactionClassifier.Processor.Models\Royware.Apps.TransactionClassifier.Processor.Models.csproj" />
     <ProjectReference Include="..\Royware.Apps.TransactionClassifier.Providers\Royware.Apps.TransactionClassifier.Providers.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="CSVReadRawTransactions\" />
     <Folder Include="DBInsertTransactions\" />
     <Folder Include="DBRetrieveTransactions\" />
     <Folder Include="DBRetrieveMerchantRules\" />
