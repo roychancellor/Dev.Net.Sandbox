@@ -8,6 +8,10 @@ namespace Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions
         [GeneratedRegex("(?<Date>[0-9]{2}\\/[0-9]{2}\\/[0-9]{4}),(?<Amount>(\\-)?[0-9.]+),\\*,(?<CheckNumber>[\\w\\s\\d]{0,}),(?<Description>[\\w\\d\\s\\W]+)")]
         private static partial Regex WellsFargoTransactionRegex();
 
+        public WellsFargoTransactionReader(IFileNameParser fileNameParser) : base(fileNameParser)
+        {
+        }
+
         public override Transaction ParseLine(string transaction)
         {
             var toReturn = new Transaction();
@@ -47,14 +51,5 @@ namespace Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions
 
             return toReturn;
         }
-    }
-
-    internal enum TransParts
-    {
-        Date = 0,
-        Amount = 1,
-        Asterisk = 2,
-        CheckNumber = 3,
-        Description = 4,
     }
 }

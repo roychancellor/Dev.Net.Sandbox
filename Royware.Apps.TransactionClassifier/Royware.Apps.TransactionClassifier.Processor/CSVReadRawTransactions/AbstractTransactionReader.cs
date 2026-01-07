@@ -8,12 +8,24 @@ namespace Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions
     public abstract class AbstractTransactionReader : ITransactionReader
     {
         private static readonly Logger _log = Loggers.Batch;
+        private readonly IFileNameParser _fileNameParser;
 
         public static Logger Log => _log;
-        
-        public virtual List<Transaction> LoadFromFile(string fullPathToFile)
+
+        protected AbstractTransactionReader(IFileNameParser fileNameParser)
+        {
+            _fileNameParser = fileNameParser;
+        }
+
+        public virtual List<Transaction> LoadFromFile(FileMetaData fileMetaData)
         {
             var toReturn = new List<Transaction>();
+            if (fileMetaData is null)
+            {
+                _log.Fatal($"Passed in file meta data object is null - returning empty");
+                return toReturn;
+            }
+            var fullPathToFile = fileMetaData?.FullPathToFile;
             if (string.IsNullOrWhiteSpace(fullPathToFile))
             {
                 _log.Fatal($"Passed in file path is null or empty - returning empty");
@@ -24,11 +36,6 @@ namespace Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions
                 _log.Fatal($"Unable to find the file {fullPathToFile} - returning empty");
                 return toReturn;
             }
-            if (!TryParseFileName(fullPathToFile, out string domain, out string accountType))
-            {
-                Log.Fatal($"The file name is formatted improperly. Must be: Domain_Account Type_Anything else.csv");
-                return toReturn;
-            }
 
             var transactionsRaw = File.ReadAllLines(fullPathToFile)
                                       .ToList();
@@ -36,8 +43,8 @@ namespace Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions
             foreach (var rt in transactionsRaw)
             {
                 var transaction = ParseLine(rt);
-                transaction?.Domain = domain;
-                transaction?.AccountType = accountType;
+                transaction?.Domain = fileMetaData.Domain.ToString();
+                transaction?.AccountType = fileMetaData.AccountType.ToString();
                 if (transaction == null || !transaction.IsProcessable())
                 {
                     _log.Error($"The transaction is not processable - skipping | ROW: {transRowId} | TRANS: {rt}");
@@ -53,21 +60,17 @@ namespace Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions
             return toReturn;
         }
 
-        private static bool TryParseFileName(string fullPathToFile, out string domain, out string accountType)
-        {
-            var fileName = Path.GetFileName(fullPathToFile);
-            var domainAccountType = fileName.Split('_');
-            var isValidFileName = domainAccountType.Length >= 2;
-            domain = "";
-            accountType = "";
-            if (isValidFileName)
-            {
-                domain = domainAccountType[0];
-                accountType = domainAccountType[1];
-            }
-            return isValidFileName;
-        }
-
         public abstract Transaction ParseLine(string transaction);
+    }
+
+    enum TransParts
+    {
+        Date,
+        Amount,
+        Asterisk,
+        CheckNumber,
+        Description,
+        Debit,
+        Credit,
     }
 }
