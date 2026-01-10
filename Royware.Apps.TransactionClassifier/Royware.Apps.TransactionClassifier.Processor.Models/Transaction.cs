@@ -32,8 +32,12 @@ namespace Royware.Apps.TransactionClassifier.Processor.Models
 
         public void SetHash()
         {
-            var toHash = $"{Domain}|{AccountType}|{TransactionDate:yyyy-MM-dd}|{Amount}|{Description}"; // Description is AFTER normalization
-            ExternalTransactionHash = SHA256.HashData(Encoding.UTF8.GetBytes(toHash));
+            ExternalTransactionHash = SHA256.HashData(Encoding.UTF8.GetBytes(TransAsString()));
+        }
+
+        public string TransAsString()
+        {
+            return $"{Domain}|{AccountType}|{TransactionDate:yyyy-MM-dd}|{Amount}|{Description}"; // Description is AFTER normalization
         }
 
         public bool IsProcessable()

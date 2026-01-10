@@ -2,6 +2,9 @@
 using NLog;
 using Royware.Apps.TransactionClassifier.Processor;
 using Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions;
+using Royware.Apps.TransactionClassifier.Processor.DBInsertTransactions;
+using Royware.Apps.TransactionClassifier.Processor.DBRepository;
+using Royware.Apps.TransactionClassifier.Processor.DBRetrieveMerchantRules;
 using Royware.Apps.TransactionClassifier.Processor.Models;
 
 namespace Royware.Apps.TransactionClassifier.AppStartup
@@ -24,6 +27,11 @@ namespace Royware.Apps.TransactionClassifier.AppStartup
                     _ => throw new ArgumentException($"Unknown {nameof(ITransactionReader)} type: {key}")
                 };
             });
+
+            services.AddScoped<ITransactionRepository, TransactionRepository>();
+            services.AddSingleton<ITransactionInsert, TransactionInserter>();
+            services.AddScoped<IMerchantRulesRepository, MerchantRulesRepository>();
+            services.AddSingleton<IMerchantRulesRetrieve, MerchantRulesRetriever>();
         }
 
         public static void LogApplicationAction(Logger log, string appName, ApplicationActions action)

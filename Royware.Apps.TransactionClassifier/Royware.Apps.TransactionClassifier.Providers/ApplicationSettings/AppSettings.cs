@@ -9,8 +9,9 @@
         public string FullPathToTransactionsFile { get; set; } = "";
         public string DbConnString { get; set; } = "";
         public string ProcInsertSingleTransaction { get; set; } = "";
+        public string ProcInsertMultipleTransactions { get; set; } = "";
         public string ProcGetUnresolvedTransactions { get; set; } = "";
-        public string ProcGetAllMerchantRules { get; set; } = "";
+        public string ViewGetAllMerchantRules { get; set; } = "";
         public string ProcUpdateMerchantRules { get; set; } = "";
         public string ProcUpdateBatchTransactions { get; set; } = "";
     }
