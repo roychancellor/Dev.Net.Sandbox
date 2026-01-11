@@ -17,14 +17,6 @@ namespace Royware.Apps.TransactionClassifier.Processor.DBInsertTransactions
             _repo = repo;
         }
 
-        /*
-         * [9] 2026-01-07 20:31:04.9991 ERROR While inserting transactions to database Microsoft.Data.SqlClient.SqlException (0x80131904):
-         * Violation of UNIQUE KEY constraint 'UQ_Transactions_ExternalTransactionHash'. Cannot insert duplicate key in object 'dbo.Transactions'.
-         * The duplicate key value is (0x05d2345b3e9e9052ba0fb8c538521009a5f58b005f43866a256d4b403749052d).
-        
-        TODO: REVERT TO INDIVIDUAL TRANSACTION INSERTIONS AND TRY-CATCH -> LOG ERROR AND MOVE ON
-
-         */
         public async Task<int> InsertAllTransactions(List<Models.Transaction> transactions)
         {
             if (transactions == null || transactions.Count == 0)

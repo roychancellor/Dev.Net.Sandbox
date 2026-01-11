@@ -2,9 +2,14 @@
 using NLog;
 using Royware.Apps.TransactionClassifier.Processor;
 using Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions;
+using Royware.Apps.TransactionClassifier.Processor.CSVWriteCategorizedTransactions;
 using Royware.Apps.TransactionClassifier.Processor.DBInsertTransactions;
 using Royware.Apps.TransactionClassifier.Processor.DBRepository;
 using Royware.Apps.TransactionClassifier.Processor.DBRetrieveMerchantRules;
+using Royware.Apps.TransactionClassifier.Processor.DBRetrieveTransactions;
+using Royware.Apps.TransactionClassifier.Processor.DBUpdateBatchTransactions;
+using Royware.Apps.TransactionClassifier.Processor.LogicCompareTransactionsToRules;
+using Royware.Apps.TransactionClassifier.Processor.LogicGenerateUnmatchedRules;
 using Royware.Apps.TransactionClassifier.Processor.Models;
 
 namespace Royware.Apps.TransactionClassifier.AppStartup
@@ -30,8 +35,17 @@ namespace Royware.Apps.TransactionClassifier.AppStartup
 
             services.AddScoped<ITransactionRepository, TransactionRepository>();
             services.AddSingleton<ITransactionInsert, TransactionInserter>();
+            services.AddSingleton<ITransactionRetrieval, TransactionRetriever>();
+            services.AddSingleton<ITransactionUpdate, TransactionUpdater>();
+
             services.AddScoped<IMerchantRulesRepository, MerchantRulesRepository>();
             services.AddSingleton<IMerchantRulesRetrieve, MerchantRulesRetriever>();
+
+            services.AddSingleton<IMerchantRuleTransactionMatcher, MerchantRuleTransactionMatcher>();
+
+            services.AddSingleton<IMerchantRulesGeneration, OpenAiMerchantRulesGenerator>();
+
+            services.AddSingleton<ITransactionWriter, CSVTransactionWriter>();
         }
 
         public static void LogApplicationAction(Logger log, string appName, ApplicationActions action)

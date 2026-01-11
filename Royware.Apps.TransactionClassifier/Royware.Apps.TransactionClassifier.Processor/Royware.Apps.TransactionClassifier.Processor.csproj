@@ -24,13 +24,4 @@
     <ProjectReference Include="..\Royware.Apps.TransactionClassifier.Providers\Royware.Apps.TransactionClassifier.Providers.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="DBRetrieveTransactions\" />
-    <Folder Include="LogicCompareTransactionsToRules\" />
-    <Folder Include="LogicGenerateUnmatchedRules\" />
-    <Folder Include="LogicReviewGeneratedRules\" />
-    <Folder Include="DBInsertMerchantRules\" />
-    <Folder Include="CSVWriteCategorizedTransactions\" />
-  </ItemGroup>
-
 </Project>

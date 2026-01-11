@@ -14,5 +14,6 @@
         public string ViewGetAllMerchantRules { get; set; } = "";
         public string ProcUpdateMerchantRules { get; set; } = "";
         public string ProcUpdateBatchTransactions { get; set; } = "";
+        public string FullPathToExportTransactions { get; set; } = "";
     }
 }

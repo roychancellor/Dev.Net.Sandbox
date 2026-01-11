@@ -2,10 +2,17 @@
 using NLog;
 using Royware.Apps.TransactionClassifier.Logging;
 using Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions;
+using Royware.Apps.TransactionClassifier.Processor.CSVWriteCategorizedTransactions;
+using Royware.Apps.TransactionClassifier.Processor.DBInsertMerchantRules;
 using Royware.Apps.TransactionClassifier.Processor.DBInsertTransactions;
 using Royware.Apps.TransactionClassifier.Processor.DBRetrieveMerchantRules;
+using Royware.Apps.TransactionClassifier.Processor.DBRetrieveTransactions;
+using Royware.Apps.TransactionClassifier.Processor.DBUpdateBatchTransactions;
+using Royware.Apps.TransactionClassifier.Processor.LogicCompareTransactionsToRules;
+using Royware.Apps.TransactionClassifier.Processor.LogicGenerateUnmatchedRules;
 using Royware.Apps.TransactionClassifier.Processor.Models;
 using Royware.Apps.TransactionClassifier.Providers.ApplicationSettings;
+using System.Data;
 
 namespace Royware.Apps.TransactionClassifier.Processor
 {
@@ -19,18 +26,36 @@ namespace Royware.Apps.TransactionClassifier.Processor
         private readonly Func<TransactionSources, ITransactionReader> _readerFactory;
         private readonly ITransactionInsert _transInserter;
         private readonly IMerchantRulesRetrieve _rulesRetriever;
+        private readonly ITransactionRetrieval _transRetriever;
+        private readonly IMerchantRuleTransactionMatcher _rulesMatcher;
+        private readonly IMerchantRulesGeneration _rulesGenerator;
+        private readonly IMerchantRulesInsertion _rulesInserter;
+        private readonly ITransactionUpdate _transUpdater;
+        private readonly ITransactionWriter _transWriter;
 
         public TransactionProcessor(IOptionsMonitor<AppSettings> appSettings
                                    ,Func<TransactionSources, ITransactionReader> readerFactory
                                    ,IFileNameParser fileNameParser
                                    ,ITransactionInsert transInserter
-                                   ,IMerchantRulesRetrieve rulesRetriever)
+                                   ,IMerchantRulesRetrieve rulesRetriever
+                                   ,ITransactionRetrieval transRetriever
+                                   ,IMerchantRuleTransactionMatcher rulesMatcher
+                                   ,IMerchantRulesGeneration rulesGenerator
+                                   ,IMerchantRulesInsertion rulesInserter
+                                   ,ITransactionUpdate transUpdater
+                                   ,ITransactionWriter transWriter)
         {
             _appSettings = appSettings;
             _fileNameParser = fileNameParser;
             _readerFactory = readerFactory;
             _transInserter = transInserter;
             _rulesRetriever = rulesRetriever;
+            _transRetriever = transRetriever;
+            _rulesMatcher = rulesMatcher;
+            _rulesGenerator = rulesGenerator;
+            _rulesInserter = rulesInserter;
+            _transUpdater = transUpdater;
+            _transWriter = transWriter;
         }
 
         public async Task ProcessAsync()
@@ -74,6 +99,77 @@ namespace Royware.Apps.TransactionClassifier.Processor
                 _log.Warn($"There are no active merchant rules in the database. Proceeding to rule creation.");
             }
 
+            List<Transaction> toExport = [];
+            while (true)
+            {
+                // RETRIEVE UNRESOLVED TRANSACTIONS
+                _log.Info($"Getting next batch of {_appSettings.CurrentValue.BatchSize} unresolved transactions");
+                var transBatch = await _transRetriever.RetrieveUnresolvedTransactions(_appSettings.CurrentValue.BatchSize);
+                if (transBatch.Count == 0)
+                {
+                    _log.Info($"There are no more unresolved transactions to process. End of processing.");
+                    break;
+                }
+                _log.Info($"Retrieved {transBatch.Count} unresolved transactions.");
+
+                // FIND A MERCHANT RULE FOR EACH TRANSACTION IN THE BATCH
+                foreach (var tx in transBatch)
+                {
+                    var matchedRule = _rulesMatcher.MatchTransactionToRule(tx, merchantRules);
+                    if (matchedRule == default)
+                    {
+                        _log.Warn($"Unable to match a merchant rule to transaction | TRANS: {tx.TransAsString()}");
+                        continue;
+                    }
+                    tx.ApplyMerchantRule(matchedRule);
+                }
+
+                // Unmatched transactions → AI
+                var uresolvedTrans = transBatch.Where(t => !t.IsResolved).ToList();
+                if (uresolvedTrans.Count > 0)
+                {
+                    var aiPayload = _rulesGenerator.PrepareAIPayload(uresolvedTrans, merchantRules.Select(r => r.Category).ToList());
+                    var candidateRules = _rulesGenerator.CallAIForCandidateRules(aiPayload);
+
+                    // Human review of AI generated rules
+                    var confirmedRules = _rulesGenerator.HumanReview(candidateRules);
+
+                    // Insert confirmed rules into DB
+                    var numRulesInserted = _rulesInserter.InsertMerchantRules(confirmedRules);
+
+                    // Re-apply newly confirmed rules
+                    foreach (var tx in uresolvedTrans)
+                    {
+                        var matchedRule = _rulesMatcher.MatchTransactionToRule(tx, confirmedRules);
+                        if (matchedRule == null)
+                        {
+                            _log.Warn($"After creating new merchant rules, still unable to match rule to transaction | TRANS: {tx.TransAsString()}");
+                            continue;
+                        }
+                        tx.ApplyMerchantRule(matchedRule);
+                    }
+
+                    // UPDATE BATCH TRANSACTIONS IN DATABASE
+                    _log.Info($"Updating transactions in database for current batch | EXPECTED: {transBatch.Count}");
+                    var numUpdated = await _transUpdater.UpdateBatchTransactions(transBatch);
+                    if (numUpdated != transBatch.Count)
+                    {
+                        _log.Error($"The number of transactions updated does not match expected. Ending. | ACTUAL: {numUpdated} | EXPECTED: {transBatch.Count}");
+                        return;
+                    }
+                    _log.Info($"Batch transactions updated | ACTUAL: {numUpdated}");
+
+                    // Update in-memory cache of rules
+                    merchantRules.AddRange(confirmedRules);
+                }
+
+                toExport.AddRange(transBatch);
+            }
+
+            // Export resolved transactions to CSV for Excel
+            _log.Info($"Exporting all resolved transactions to CSV file | LOADED: {transactionsToProcess.Count} | PROCESSED: {toExport.Count}");
+            await _transWriter.ExportTransactionsToCsv(toExport, _appSettings.CurrentValue.FullPathToExportTransactions, fileMeta);
+            _log.Info($"Transactions exported.");
 
             _log.Info($"<==== Batch Complete");
             return;

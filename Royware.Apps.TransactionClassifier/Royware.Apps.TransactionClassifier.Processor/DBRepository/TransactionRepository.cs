@@ -16,7 +16,7 @@ namespace Royware.Apps.TransactionClassifier.Processor.DBRepository
             _appSettings = appSettings;
         }
 
-        public async Task<List<Transaction>> RetrieveTransactions(int batchSize)
+        public async Task<List<Transaction>> RetrieveUnresolvedTransactionsBatch(int batchSize)
         {
             if (batchSize <= 0)
             {
@@ -27,15 +27,16 @@ namespace Royware.Apps.TransactionClassifier.Processor.DBRepository
             using (var conn = new SqlConnection(_appSettings.CurrentValue.DbConnString))
             {
                 var inputs = new DynamicParameters();
-                inputs.Add("@BatchSize", _appSettings.CurrentValue.BatchSize);
+                inputs.Add("@BatchSize", batchSize);
 
                 var transactions = await conn.QueryAsync<Transaction>(_appSettings.CurrentValue.ProcGetUnresolvedTransactions, inputs, commandType: CommandType.StoredProcedure);
-                toReturn = transactions.Any() ? [.. toReturn] : toReturn;
+                toReturn = transactions.Any() ? [.. transactions] : toReturn;
             }
 
             return toReturn;
         }
 
+        // NOT CURRENTLY USED - WOULD NEED TO REFACTOR STORED PROC TO DO A MERGE-INSERT TO NOT THROW FOR DUPES
         public async Task<int> InsertTransactions(List<Transaction> transactions)
         {
             /*
@@ -71,16 +72,9 @@ namespace Royware.Apps.TransactionClassifier.Processor.DBRepository
             return rowsInserted;
         }
 
+        // CURRENTLY USING THIS METHOD
         public async Task<int> InsertSingleTransaction(Transaction transaction)
         {
-            /*
-             * [Description] [nvarchar](500) NULL,
-	[Amount] [decimal](18, 2) NULL,
-	[TransactionDate] [date] NULL,
-	[DomainName] [nvarchar](100) NULL,
-	[AccountTypeName] [nvarchar](100) NULL,
-	[ExternalTransactionHash] [binary](32) NULL
-             */
             var parameters = new DynamicParameters();
             parameters.Add("@Description", transaction.Description);
             parameters.Add("@Amount", transaction.Amount);
