@@ -27,31 +27,13 @@ namespace Royware.Apps.TransactionClassifier.Processor.LogicGenerateAndReviewUnm
 
         }
 
-        public List<MerchantRule> CallAIForCandidateRules(object payload)
+        public string PrepareAIRequestPayload(List<Transaction> batchTransactions, List<Category> categories)
         {
-            throw new NotImplementedException();
-        }
-
-        public List<MerchantRule> HumanReview(List<MerchantRuleProposal> candidateRules)
-        {
-            throw new NotImplementedException();
-        }
-
-        public object PrepareAIPayload(List<Transaction> unmatched, List<string> knownCategories)
-        {
-            throw new NotImplementedException();
-        }
-
-        public async Task<List<MerchantRuleProposal>> GetMerchantRuleProposalsAsync(List<Transaction> batchTransactions,
-                                                                                    List<Category> categories,
-                                                                                    CancellationToken cancellationToken = default)
-        {
-            if (batchTransactions.Count == 0)
+            if (batchTransactions.Count == 0 || categories.Count == 0)
             {
-                return [];
+                return string.Empty;
             }
-            
-            // 1. Build payload
+
             var payload = new
             {
                 knownCategories = categories.Select(c => c.CategoryName).ToList(),
@@ -70,7 +52,6 @@ namespace Royware.Apps.TransactionClassifier.Processor.LogicGenerateAndReviewUnm
 
             var payloadJson = JsonSerializer.Serialize(payload);
 
-            // 2. Messages
             var systemPrompt =
         """
 You are a transaction normalization assistant.
@@ -150,11 +131,15 @@ Payload:
 
 
             var requestJson = JsonSerializer.Serialize(request, _propertyNameCaseInsensitiveCamelCase);
+            return requestJson;
+        }
 
-            // 3. HTTP call
+        public async Task<List<MerchantRuleProposal>> GetMerchantRuleProposalsAsync(string requestAsJson,
+                                                                                    CancellationToken cancellationToken = default)
+        {
             using var requestMessage = new HttpRequestMessage(HttpMethod.Post, _appSettings.CurrentValue.AiRequestUrl)
             {
-                Content = new StringContent(requestJson, Encoding.UTF8, "application/json")
+                Content = new StringContent(requestAsJson, Encoding.UTF8, "application/json")
             };
             requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _appSettings.CurrentValue.AiApiKey);
 
@@ -165,13 +150,23 @@ Payload:
                 var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
                 throw new InvalidOperationException($"OpenAI call failed ({response.StatusCode}): {errorBody}");
             }
+            
+            var responseAsJson = await response.Content.ReadAsStringAsync(cancellationToken);
+            var cleanModelText = ExtractCleanAiResponseModelText(responseAsJson);
 
-            var responseJson = await response.Content.ReadAsStringAsync(cancellationToken);
+            var proposedMerchantRules = JsonSerializer.Deserialize<List<MerchantRuleProposal>>(cleanModelText, _propertyNameCaseInsensitiveCamelCase);
 
-            // 4. Extract model output
+            return proposedMerchantRules ?? [];
+        }
 
-            using var doc = JsonDocument.Parse(responseJson);
+        public List<MerchantRule> HumanReview(List<MerchantRuleProposal> candidateRules)
+        {
+            throw new NotImplementedException();
+        }
 
+        private static string ExtractCleanAiResponseModelText(string responseJson)
+        {
+            var doc = JsonDocument.Parse(responseJson);
             string modelText = doc.RootElement
                                .GetProperty("output")
                                .EnumerateArray()
@@ -183,10 +178,7 @@ Payload:
 
             var cleanModelText = CleanModelText(modelText);
 
-            // THIS string has real newlines, not \n
-            var proposals = JsonSerializer.Deserialize<List<MerchantRuleProposal>>(cleanModelText, _propertyNameCaseInsensitiveCamelCase);
-            
-            return proposals ?? [];
+            return cleanModelText;
         }
 
         private static string CleanModelText(string modelText)

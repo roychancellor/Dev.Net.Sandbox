@@ -4,10 +4,8 @@ namespace Royware.Apps.TransactionClassifier.Processor.LogicGenerateUnmatchedRul
 {
     public interface IMerchantRulesGeneration
     {
-        object PrepareAIPayload(List<Transaction> unmatched, List<string> knownCategories);
-        List<MerchantRule> CallAIForCandidateRules(object payload);
-        Task<List<MerchantRuleProposal>> GetMerchantRuleProposalsAsync(List<Transaction> transactions,
-                                                                       List<Category> knownCategories,
+        string PrepareAIRequestPayload(List<Transaction> batchTransactions, List<Category> categories);
+        Task<List<MerchantRuleProposal>> GetMerchantRuleProposalsAsync(string requestAsJson,
                                                                        CancellationToken cancellationToken);
         List<MerchantRule> HumanReview(List<MerchantRuleProposal> candidateRules);
     }

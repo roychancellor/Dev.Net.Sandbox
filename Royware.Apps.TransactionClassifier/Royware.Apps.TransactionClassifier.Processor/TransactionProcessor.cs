@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
 using NLog;
 using Royware.Apps.TransactionClassifier.Logging;
 using Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions;
@@ -144,20 +145,25 @@ namespace Royware.Apps.TransactionClassifier.Processor
                 var uresolvedTrans = transBatch.Where(t => !t.IsResolved).ToList();
                 if (uresolvedTrans.Count > 0)
                 {
-                    //var aiPayload = _rulesGenerator.PrepareAIPayload(uresolvedTrans, merchantRules.Select(r => r.Category).ToList());
-                    //var candidateRules = _rulesGenerator.CallAIForCandidateRules(aiPayload);
                     List<MerchantRuleProposal> candidateRules = [];
                     try
                     {
-                        candidateRules = await _rulesGenerator.GetMerchantRuleProposalsAsync(uresolvedTrans,
-                                                                                             knownCategories,
-                                                                                             new CancellationTokenSource().Token);
+                        _log.Info($"Using AI to generate merchant rule proposals");
+                        var aiRequest = _rulesGenerator.PrepareAIRequestPayload(uresolvedTrans, knownCategories);
+                        if (string.IsNullOrEmpty(aiRequest))
+                        {
+                            _log.Error($"Unable to prepare the API request string as JSON.");
+                            return;
+                        }
+                        candidateRules = await _rulesGenerator.GetMerchantRuleProposalsAsync(aiRequest, new CancellationTokenSource().Token);
+                        _log.Info($"Merchant rule proposals received for batch | COUNT: {candidateRules.Count}");
                     }
                     catch (Exception ex)
                     {
                         _log.Error(ex, $"While making AI call. Ending.");
                         return;
                     }
+                    
                     if (candidateRules.Count == 0)
                     {
                         _log.Warn($"The AI call returned zero candidate rules. Moving to next batch.");
