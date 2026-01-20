@@ -21,6 +21,7 @@ namespace Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions
                 return false;
             }
             fileMetaData = FileMetaData.Build(metaDataParts[0], metaDataParts[1], metaDataParts[2]);
+            fileMetaData.FullPathToFile = fullPathToFile;
             return true;
         }
     }

@@ -5,6 +5,7 @@ using Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions;
 using Royware.Apps.TransactionClassifier.Processor.CSVWriteCategorizedTransactions;
 using Royware.Apps.TransactionClassifier.Processor.DBInsertMerchantRules;
 using Royware.Apps.TransactionClassifier.Processor.DBInsertTransactions;
+using Royware.Apps.TransactionClassifier.Processor.DBRetrieveCategories;
 using Royware.Apps.TransactionClassifier.Processor.DBRetrieveMerchantRules;
 using Royware.Apps.TransactionClassifier.Processor.DBRetrieveTransactions;
 using Royware.Apps.TransactionClassifier.Processor.DBUpdateBatchTransactions;
@@ -25,6 +26,7 @@ namespace Royware.Apps.TransactionClassifier.Processor
         private readonly IFileNameParser _fileNameParser;
         private readonly Func<TransactionSources, ITransactionReader> _readerFactory;
         private readonly ITransactionInsert _transInserter;
+        private readonly ICategoriesRetrieve _categoriesRetriever;
         private readonly IMerchantRulesRetrieve _rulesRetriever;
         private readonly ITransactionRetrieval _transRetriever;
         private readonly IMerchantRuleTransactionMatcher _rulesMatcher;
@@ -37,6 +39,7 @@ namespace Royware.Apps.TransactionClassifier.Processor
                                    ,Func<TransactionSources, ITransactionReader> readerFactory
                                    ,IFileNameParser fileNameParser
                                    ,ITransactionInsert transInserter
+                                   ,ICategoriesRetrieve categoriesRetriever
                                    ,IMerchantRulesRetrieve rulesRetriever
                                    ,ITransactionRetrieval transRetriever
                                    ,IMerchantRuleTransactionMatcher rulesMatcher
@@ -49,6 +52,7 @@ namespace Royware.Apps.TransactionClassifier.Processor
             _fileNameParser = fileNameParser;
             _readerFactory = readerFactory;
             _transInserter = transInserter;
+            _categoriesRetriever = categoriesRetriever;
             _rulesRetriever = rulesRetriever;
             _transRetriever = transRetriever;
             _rulesMatcher = rulesMatcher;
@@ -89,6 +93,17 @@ namespace Royware.Apps.TransactionClassifier.Processor
                 return;
             }
 
+            // RETRIEVE KNOWN CATEGORIES
+            _log.Info($"Retrieving known transaction categories");
+            var knownCategories = await _categoriesRetriever.RetrieveActiveCategories();
+            _log.Info($"Categories retrieved | COUNT: {knownCategories.Count}");
+
+            if (knownCategories.Count == 0)
+            {
+                _log.Warn($"There are no active categories in the database. Ending.");
+                return;
+            }
+
             // RETRIEVE MERCHANT RULES
             _log.Info($"Retrieving active merchant rules");
             var merchantRules = await _rulesRetriever.RetrieveActiveMerchantRules();
@@ -121,6 +136,7 @@ namespace Royware.Apps.TransactionClassifier.Processor
                         _log.Warn($"Unable to match a merchant rule to transaction | TRANS: {tx.TransAsString()}");
                         continue;
                     }
+                    _traceLog.Trace($"Matched rule to transaction | TRANS: {tx.TransAsString()} | RULE ID: {matchedRule}");
                     tx.ApplyMerchantRule(matchedRule);
                 }
 
@@ -128,13 +144,29 @@ namespace Royware.Apps.TransactionClassifier.Processor
                 var uresolvedTrans = transBatch.Where(t => !t.IsResolved).ToList();
                 if (uresolvedTrans.Count > 0)
                 {
-                    var aiPayload = _rulesGenerator.PrepareAIPayload(uresolvedTrans, merchantRules.Select(r => r.Category).ToList());
-                    var candidateRules = _rulesGenerator.CallAIForCandidateRules(aiPayload);
+                    //var aiPayload = _rulesGenerator.PrepareAIPayload(uresolvedTrans, merchantRules.Select(r => r.Category).ToList());
+                    //var candidateRules = _rulesGenerator.CallAIForCandidateRules(aiPayload);
+                    List<MerchantRuleProposal> candidateRules = [];
+                    try
+                    {
+                        candidateRules = await _rulesGenerator.GetMerchantRuleProposalsAsync(uresolvedTrans,
+                                                                                             knownCategories,
+                                                                                             new CancellationTokenSource().Token);
+                    }
+                    catch (Exception ex)
+                    {
+                        _log.Error(ex, $"While making AI call. Ending.");
+                        return;
+                    }
+                    if (candidateRules.Count == 0)
+                    {
+                        _log.Warn($"The AI call returned zero candidate rules. Moving to next batch.");
+                        continue;
+                    }
 
-                    // Human review of AI generated rules
                     var confirmedRules = _rulesGenerator.HumanReview(candidateRules);
 
-                    // Insert confirmed rules into DB
+                    // TODO: Implement inactivate/insert logic from https://chatgpt.com/c/69573d80-9e84-832e-b608-1c0ce926494a
                     var numRulesInserted = _rulesInserter.InsertMerchantRules(confirmedRules);
 
                     // Re-apply newly confirmed rules

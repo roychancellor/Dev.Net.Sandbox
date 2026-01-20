@@ -73,8 +73,8 @@ namespace Royware.Apps.TransactionClassifier.Processor.Models
         {
             Category = rule.Category;
             ResolvedMerchant = rule.NormalizedMerchant;
-            IsResolved = true;
             MatchedRuleId = rule.MerchantRuleId;
+            IsResolved = true;
         }
     }
 }

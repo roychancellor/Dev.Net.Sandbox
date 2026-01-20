@@ -2,8 +2,10 @@
 {
     public sealed class AppSettings
     {
-        public string OpenAiApiKey { get; set; } = default!;
-        public string Model { get; set; } = default!;
+        public string AiApiKey { get; set; } = default!;
+        public string AiRequestUrl { get; set; } = "";
+        public string AiModel { get; set; } = default!;
+        public int AiMaxOutputTokens { get; set; }
         public int BatchSize { get; set; }
         public double ConfidenceThreshold { get; set; }
         public string FullPathToTransactionsFile { get; set; } = "";
@@ -12,7 +14,8 @@
         public string ProcInsertMultipleTransactions { get; set; } = "";
         public string ProcGetUnresolvedTransactions { get; set; } = "";
         public string ViewGetAllMerchantRules { get; set; } = "";
-        public string ProcUpdateMerchantRules { get; set; } = "";
+        public string ViewGetAllCategories { get; set; } = "";
+        public string ProcInsertMerchantRules { get; set; } = "";
         public string ProcUpdateBatchTransactions { get; set; } = "";
         public string FullPathToExportTransactions { get; set; } = "";
     }

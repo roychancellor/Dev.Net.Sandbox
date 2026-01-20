@@ -13,5 +13,10 @@
         public decimal Confidence { get; set; }
         public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
+
+        public override string ToString()
+        {
+            return $"NormalizedMerchant: {NormalizedMerchant} | Required Terms: {string.Join(',', RequiredTerms)} | Excluded Terms: {string.Join(',', ExcludedTerms)}";
+        }
     }
 }

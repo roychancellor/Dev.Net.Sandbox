@@ -1,7 +1,6 @@
 ﻿using NLog;
 using Royware.Apps.TransactionClassifier.Logging;
 using Royware.Apps.TransactionClassifier.Processor.Models;
-using System.Text.RegularExpressions;
 
 namespace Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions
 {

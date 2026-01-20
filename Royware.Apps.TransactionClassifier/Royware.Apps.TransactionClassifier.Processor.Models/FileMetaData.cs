@@ -15,8 +15,8 @@
         public static FileMetaData Build(string source, string domain, string accountType)
         {
             var resolvedSource = Enum.TryParse(source, out TransactionSources parsedSource) ? parsedSource : TransactionSources.WellsFargo;
-            var resolvedDomain = Enum.TryParse(source, out Domains parsedDomain) ? parsedDomain : Domains.PERSONAL;
-            var resolvedAccountType = Enum.TryParse(source, out AccountTypes parsedAccountType) ? parsedAccountType : AccountTypes.OurChecking;
+            var resolvedDomain = Enum.TryParse(domain, out Domains parsedDomain) ? parsedDomain : Domains.PERSONAL;
+            var resolvedAccountType = Enum.TryParse(accountType, out AccountTypes parsedAccountType) ? parsedAccountType : AccountTypes.OurChecking;
 
             return new FileMetaData
             {

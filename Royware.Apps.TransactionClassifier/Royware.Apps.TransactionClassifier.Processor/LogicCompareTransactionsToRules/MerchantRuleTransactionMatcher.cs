@@ -9,27 +9,61 @@ namespace Royware.Apps.TransactionClassifier.Processor.LogicCompareTransactionsT
         private static readonly Logger _log = Loggers.Batch;
         private static readonly Logger _traceLog = Loggers.BatchTrace;
 
-        public MerchantRule? MatchTransactionToRule(Transaction tx, List<MerchantRule> rules)
+        public MerchantRule? MatchTransactionToRule(Transaction tx, List<MerchantRule> activeRules)
         {
-            // Apply deterministic matching logic (RequiredTerms, ExcludedTerms, Domain, AccountType)
-            /*
-             public string Domain { get; set; } = "";
-        public string AccountType { get; set; } = "";
-        public string Category { get; set; } = "";
-        public List<string> RequiredTerms { get; set; } = [];
-        public List<string> ExcludedTerms { get; set; } = [];
-             */
-            var rulesTheMatch_Domain_AccountType_Category = rules.Where(r => r.Domain.CompareTo(tx.Domain, StringComparison.OrdinalIgnoreCase) == 0 &&
-                                                                             r.AccountType.CompareTo(tx.AccountType, StringComparison.OrdinalIgnoreCase) == 0 &&
-                                                                             r.Category.CompareTo(tx.Category, StringComparison.OrdinalIgnoreCase) == 0);
-            if (!rulesTheMatch_Domain_AccountType_Category.Any())
+            // ELIGIBLE rules
+            var eligibleRules = activeRules
+                               .Where(r => IsMatch(tx, r))
+                               .Select(r => new { Rule = r, Specificity = ComputeSpecificityScore(tx, r) })
+                               .ToList();
+
+            if (eligibleRules.Count == 0)
             {
-                return default;
+                return null;
             }
-            var matchedRule = rulesTheMatch_Domain_AccountType_Category
-                             .FirstOrDefault(r => r.RequiredTerms.All(t => tx.Description.Contains(t)) &&
-                                                 !r.ExcludedTerms.Any(e => tx.Description.Contains(e)));
-            return matchedRule;
+
+            // Select winner deterministically
+            var winner = eligibleRules
+                        .OrderByDescending(x => x.Specificity)
+                        .ThenByDescending(x => x.Rule.Priority)
+                        .ThenBy(x => x.Rule.MerchantRuleId)
+                        .FirstOrDefault()?
+                        .Rule;
+
+            return winner;
+        }
+
+        private static bool IsMatch(Transaction tx, MerchantRule r)
+        {
+            // Domain / AccountType / Category must match exactly
+            if (!r.Domain.Equals(tx.Domain, StringComparison.OrdinalIgnoreCase) ||
+                !r.AccountType.Equals(tx.AccountType, StringComparison.OrdinalIgnoreCase) ||
+                !r.Category.Equals(tx.Category, StringComparison.OrdinalIgnoreCase))
+            {
+                return false;
+            }
+
+            // All required terms must appear and no excluded terms may appear
+            if (!r.RequiredTerms.All(t => tx.Description.Contains(t, StringComparison.OrdinalIgnoreCase)) ||
+                 r.ExcludedTerms.Any(e => tx.Description.Contains(e, StringComparison.OrdinalIgnoreCase)))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private static int ComputeSpecificityScore(Transaction tx, MerchantRule r)
+        {
+            int score = 0;
+
+            // Count required terms that matched
+            score += r.RequiredTerms.Count(t => tx.Description.Contains(t, StringComparison.OrdinalIgnoreCase));
+
+            // Count excluded terms that correctly did NOT match
+            score += r.ExcludedTerms.Count(e => !tx.Description.Contains(e, StringComparison.OrdinalIgnoreCase));
+
+            return score;
         }
     }
 }

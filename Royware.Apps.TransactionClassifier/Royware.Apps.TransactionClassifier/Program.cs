@@ -4,6 +4,7 @@ using Royware.Apps.TransactionClassifier.Logging;
 using Royware.Apps.TransactionClassifier.Processor;
 using Royware.Apps.TransactionClassifier.AppStartup;
 using Royware.Apps.TransactionClassifier.Providers.ApplicationSettings;
+using System.Net.Http;
 
 namespace Royware.Apps.TransactionClassifier
 {

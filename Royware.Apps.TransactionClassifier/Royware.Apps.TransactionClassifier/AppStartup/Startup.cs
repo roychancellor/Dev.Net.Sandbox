@@ -3,12 +3,15 @@ using NLog;
 using Royware.Apps.TransactionClassifier.Processor;
 using Royware.Apps.TransactionClassifier.Processor.CSVReadRawTransactions;
 using Royware.Apps.TransactionClassifier.Processor.CSVWriteCategorizedTransactions;
+using Royware.Apps.TransactionClassifier.Processor.DBInsertMerchantRules;
 using Royware.Apps.TransactionClassifier.Processor.DBInsertTransactions;
 using Royware.Apps.TransactionClassifier.Processor.DBRepository;
+using Royware.Apps.TransactionClassifier.Processor.DBRetrieveCategories;
 using Royware.Apps.TransactionClassifier.Processor.DBRetrieveMerchantRules;
 using Royware.Apps.TransactionClassifier.Processor.DBRetrieveTransactions;
 using Royware.Apps.TransactionClassifier.Processor.DBUpdateBatchTransactions;
 using Royware.Apps.TransactionClassifier.Processor.LogicCompareTransactionsToRules;
+using Royware.Apps.TransactionClassifier.Processor.LogicGenerateAndReviewUnmatchedRules;
 using Royware.Apps.TransactionClassifier.Processor.LogicGenerateUnmatchedRules;
 using Royware.Apps.TransactionClassifier.Processor.Models;
 
@@ -16,8 +19,10 @@ namespace Royware.Apps.TransactionClassifier.AppStartup
 {
     public static class Startup
     {
-        public static void ConfigureDependencies(ServiceCollection services)
+        public static void ConfigureDependencies(IServiceCollection services)
         {
+            services.AddHttpClient();
+            
             services.AddSingleton<TransactionProcessor>();
             services.AddSingleton<WellsFargoTransactionReader>();
             services.AddSingleton<CitiBankTransactionReader>();
@@ -38,12 +43,17 @@ namespace Royware.Apps.TransactionClassifier.AppStartup
             services.AddSingleton<ITransactionRetrieval, TransactionRetriever>();
             services.AddSingleton<ITransactionUpdate, TransactionUpdater>();
 
+            services.AddScoped<ICategoriesRepository, CategoriesRepository>();
+            services.AddSingleton<ICategoriesRetrieve, CategoriesRetriever>();
+
             services.AddScoped<IMerchantRulesRepository, MerchantRulesRepository>();
             services.AddSingleton<IMerchantRulesRetrieve, MerchantRulesRetriever>();
 
             services.AddSingleton<IMerchantRuleTransactionMatcher, MerchantRuleTransactionMatcher>();
 
             services.AddSingleton<IMerchantRulesGeneration, OpenAiMerchantRulesGenerator>();
+
+            services.AddSingleton<IMerchantRulesInsertion, MerchantRulesInserter>();
 
             services.AddSingleton<ITransactionWriter, CSVTransactionWriter>();
         }

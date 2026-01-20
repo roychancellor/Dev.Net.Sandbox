@@ -11,7 +11,7 @@ namespace Royware.Apps.TransactionClassifier.Tests
         {
             var transUT = Transactions.Csv_WellsFargo_Success_PositiveAmount;
 
-            var ut = new WellsFargoTransactionReader();
+            var ut = new WellsFargoTransactionReader(new FileNameParser());
 
             var result = ut.ParseLine(transUT.Transaction);
 
@@ -27,7 +27,7 @@ namespace Royware.Apps.TransactionClassifier.Tests
         {
             var transUT = Transactions.Csv_WellsFargo_Success_NegativeAmount;
 
-            var ut = new WellsFargoTransactionReader();
+            var ut = new WellsFargoTransactionReader(new FileNameParser());
 
             var result = ut.ParseLine(transUT.Transaction);
 
