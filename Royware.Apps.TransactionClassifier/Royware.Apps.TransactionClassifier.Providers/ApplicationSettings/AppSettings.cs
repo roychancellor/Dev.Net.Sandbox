@@ -2,7 +2,6 @@
 {
     public sealed class AppSettings
     {
-        public string AiApiKey { get; set; } = default!;
         public string AiRequestUrl { get; set; } = "";
         public string AiModel { get; set; } = default!;
         public int AiMaxOutputTokens { get; set; }

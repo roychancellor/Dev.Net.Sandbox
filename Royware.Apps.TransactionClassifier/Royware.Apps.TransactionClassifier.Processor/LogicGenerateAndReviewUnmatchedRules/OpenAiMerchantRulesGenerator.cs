@@ -18,13 +18,14 @@ namespace Royware.Apps.TransactionClassifier.Processor.LogicGenerateAndReviewUnm
         };
         private readonly IOptionsMonitor<AppSettings> _appSettings;
         private readonly HttpClient _client;
+        private readonly string _aiApiKey;
 
         public OpenAiMerchantRulesGenerator(IOptionsMonitor<AppSettings> appSettings, IHttpClientFactory clientFactory)
         {
             _appSettings = appSettings;
             _client = clientFactory.CreateClient();
             _client.Timeout = TimeSpan.FromSeconds(120);
-
+            _aiApiKey = Environment.GetEnvironmentVariable("OPEN_API_KEY") ?? throw new ApplicationException($"UNABLE TO RETRIEVE OPEN_API_KEY");
         }
 
         public string PrepareAIRequestPayload(List<Transaction> batchTransactions, List<Category> categories)
@@ -141,7 +142,7 @@ Payload:
             {
                 Content = new StringContent(requestAsJson, Encoding.UTF8, "application/json")
             };
-            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _appSettings.CurrentValue.AiApiKey);
+            requestMessage.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _aiApiKey);
 
             var response = await _client.SendAsync(requestMessage, cancellationToken);
 
