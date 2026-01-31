@@ -131,6 +131,9 @@ namespace Royware.Apps.TransactionClassifier.Processor
                 // FIND A MERCHANT RULE FOR EACH TRANSACTION IN THE BATCH
                 foreach (var tx in transBatch)
                 {
+                    // TODO: This is failing when there is a rule that would match on the required term,
+                    // but if the transaction is not yet categorized, it doesn't have a category yet, so IsMatch returns false
+                    // and it never checks the required terms and excluded terms.
                     var matchedRule = _rulesMatcher.MatchTransactionToRule(tx, merchantRules);
                     if (matchedRule == default)
                     {
@@ -142,14 +145,14 @@ namespace Royware.Apps.TransactionClassifier.Processor
                 }
 
                 // Unmatched transactions → AI
-                var uresolvedTrans = transBatch.Where(t => !t.IsResolved).ToList();
-                if (uresolvedTrans.Count > 0)
+                var unresolvedTrans = transBatch.Where(t => !t.IsResolved).ToList();
+                if (unresolvedTrans.Count > 0)
                 {
                     List<MerchantRuleProposal> candidateRules = [];
                     try
                     {
                         _log.Info($"Using AI to generate merchant rule proposals");
-                        var aiRequest = _rulesGenerator.PrepareAIRequestPayload(uresolvedTrans, knownCategories);
+                        var aiRequest = _rulesGenerator.PrepareAIRequestPayload(unresolvedTrans, knownCategories);
                         if (string.IsNullOrEmpty(aiRequest))
                         {
                             _log.Error($"Unable to prepare the API request string as JSON.");
@@ -170,13 +173,16 @@ namespace Royware.Apps.TransactionClassifier.Processor
                         continue;
                     }
 
-                    var confirmedRules = _rulesGenerator.HumanReview(candidateRules);
+                    var confirmedRules = _rulesGenerator.HumanReview(candidateRules, fileMeta, unresolvedTrans);
 
                     // TODO: Implement inactivate/insert logic from https://chatgpt.com/c/69573d80-9e84-832e-b608-1c0ce926494a
-                    var numRulesInserted = _rulesInserter.InsertMerchantRules(confirmedRules);
+                    var numRulesInserted = await _rulesInserter.InsertMerchantRules(confirmedRules);
 
-                    // Re-apply newly confirmed rules
-                    foreach (var tx in uresolvedTrans)
+                    // TODO: REMOVE TRANSACTION UPDATING FROM HumanReview METHOD AND INTO ANOTHER (NEW) METHOD - NEED THE MERCHANT RULE ID FOR THE INSERTED RULES
+                    // IN ORDER TO FULLY UPDATE EACH TRANSACTION
+
+                    // Verify newly confirmed rules on the current list of unresolved transactions - they should all match a rule now
+                    foreach (var tx in unresolvedTrans)
                     {
                         var matchedRule = _rulesMatcher.MatchTransactionToRule(tx, confirmedRules);
                         if (matchedRule == null)
@@ -184,7 +190,6 @@ namespace Royware.Apps.TransactionClassifier.Processor
                             _log.Warn($"After creating new merchant rules, still unable to match rule to transaction | TRANS: {tx.TransAsString()}");
                             continue;
                         }
-                        tx.ApplyMerchantRule(matchedRule);
                     }
 
                     // UPDATE BATCH TRANSACTIONS IN DATABASE
@@ -198,9 +203,11 @@ namespace Royware.Apps.TransactionClassifier.Processor
                     _log.Info($"Batch transactions updated | ACTUAL: {numUpdated}");
 
                     // Update in-memory cache of rules
+                    // TODO: ONLY ADD RULES THAT WERE NOT REJECTED
                     merchantRules.AddRange(confirmedRules);
                 }
 
+                // TODO: ONLY ADD TRANSACTIONS THAT WERE RESOLVED
                 toExport.AddRange(transBatch);
             }
 

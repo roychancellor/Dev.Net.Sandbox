@@ -58,7 +58,7 @@ namespace Royware.Apps.TransactionClassifier.Processor.DBRepository
             tvp.Add("@MerchantRules", dt.AsTableValuedParameter("dbo.MerchantRuleTableType"));
 
             using SqlConnection conn = new(_appSettings.CurrentValue.DbConnString);
-            var numInserted = await conn.ExecuteAsync(_appSettings.CurrentValue.ProcInsertMerchantRules, tvp, commandType: CommandType.StoredProcedure);
+            var numInserted = await conn.ExecuteScalarAsync<int>(_appSettings.CurrentValue.ProcInsertMerchantRules, tvp, commandType: CommandType.StoredProcedure);
 
             return numInserted;
         }

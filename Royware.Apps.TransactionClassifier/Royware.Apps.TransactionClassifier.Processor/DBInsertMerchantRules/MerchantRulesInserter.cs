@@ -25,9 +25,10 @@ namespace Royware.Apps.TransactionClassifier.Processor.DBInsertMerchantRules
 
             try
             {
-                _log.Info($"Inserting merchant rules | EXPECTED: {merchantRules.Count}");
+                _log.Info($"Inserting merchant rules | TOTAL POSSIBLE: {merchantRules.Count}");
                 var numInserted = await _repo.InsertMerchantRules(merchantRules);
-                _log.Info($"Rules inserted | ACTUAL: {numInserted}");
+                var caveatText = merchantRules.Count != numInserted ? " (the procedure will not insert duplicate rules)" : "";
+                _log.Info($"Rules inserted | ACTUAL COUNT: {numInserted}{caveatText}");
 
                 return numInserted;
             }

@@ -7,5 +7,6 @@ namespace Royware.Apps.TransactionClassifier.Processor.DBRepository
         Task<List<Transaction>> RetrieveUnresolvedTransactionsBatch(int batchSize);
         Task<int> InsertTransactions(List<Transaction> transactions);
         Task<int> InsertSingleTransaction(Transaction transaction);
+        Task<int> UpdateBatchTransactions(List<Transaction> transactions);
     }
 }

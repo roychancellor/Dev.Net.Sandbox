@@ -91,5 +91,30 @@ namespace Royware.Apps.TransactionClassifier.Processor.DBRepository
 
             return rowsInserted;
         }
+
+        public async Task<int> UpdateBatchTransactions(List<Transaction> transactions)
+        {
+            var dt = new DataTable();
+            dt.Columns.Add(nameof(Transaction.TransactionId), typeof(long));
+            dt.Columns.Add(nameof(Transaction.ResolvedMerchant), typeof(string));
+            dt.Columns.Add(nameof(Transaction.MatchedRuleId), typeof(int));
+            dt.Columns.Add(nameof(Transaction.IsResolved), typeof(bool));
+
+            foreach (var t in transactions)
+            {
+                dt.Rows.Add(t.TransactionId,
+                            t.ResolvedMerchant,
+                            t.MatchedRuleId,
+                            t.IsResolved);
+            }
+
+            var tvp = new DynamicParameters();
+            tvp.Add("@TransactionsToUpdate", dt.AsTableValuedParameter("dbo.TransactionUpdateTableType"));
+
+            using SqlConnection conn = new(_appSettings.CurrentValue.DbConnString);
+            var numUpdated = await conn.ExecuteScalarAsync<int>(_appSettings.CurrentValue.ProcUpdateBatchTransactions, tvp, commandType: CommandType.StoredProcedure);
+
+            return numUpdated;
+        }
     }
 }

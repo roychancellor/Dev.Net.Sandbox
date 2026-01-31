@@ -18,5 +18,22 @@
         {
             return $"NormalizedMerchant: {NormalizedMerchant} | Required Terms: {string.Join(',', RequiredTerms)} | Excluded Terms: {string.Join(',', ExcludedTerms)}";
         }
+
+        public static MerchantRule MappedFrom(MerchantRuleProposal mrp, FileMetaData fmd)
+        {
+            return new MerchantRule
+            {
+                NormalizedMerchant = mrp.NormalizedMerchant,
+                Domain = fmd.Domain.ToString(),
+                AccountType = fmd.AccountType.ToString(),
+                Category = mrp.Category,
+                RequiredTerms = mrp.RequiredTerms,
+                ExcludedTerms = mrp.ExcludedTerms,
+                Priority = 1,
+                Confidence = mrp.Confidence ?? 1,
+                IsActive = true,
+                CreatedAt = DateTime.Now,
+            };
+        }
     }
 }

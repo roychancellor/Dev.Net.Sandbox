@@ -1,9 +1,12 @@
 ﻿using Microsoft.Extensions.Options;
 using Microsoft.Identity.Client;
+using NLog;
+using Royware.Apps.TransactionClassifier.Logging;
 using Royware.Apps.TransactionClassifier.Processor.LogicGenerateUnmatchedRules;
 using Royware.Apps.TransactionClassifier.Processor.Models;
 using Royware.Apps.TransactionClassifier.Providers.ApplicationSettings;
 using System.Net.Http.Headers;
+using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.Json;
 
@@ -11,6 +14,8 @@ namespace Royware.Apps.TransactionClassifier.Processor.LogicGenerateAndReviewUnm
 {
     public class OpenAiMerchantRulesGenerator : IMerchantRulesGeneration
     {
+        private static readonly Logger _log = Loggers.Batch;
+        
         private static readonly JsonSerializerOptions _propertyNameCaseInsensitiveCamelCase = new()
         {
             PropertyNameCaseInsensitive = true,
@@ -160,9 +165,74 @@ Payload:
             return proposedMerchantRules ?? [];
         }
 
-        public List<MerchantRule> HumanReview(List<MerchantRuleProposal> candidateRules)
+        public List<MerchantRule> HumanReview(List<MerchantRuleProposal> candidateRules, FileMetaData fileMeta, List<Transaction> currentBatch)
         {
-            throw new NotImplementedException();
+            if (candidateRules.Count == 0)
+            {
+                return [];
+            }
+
+            Console.WriteLine($"For each rule, choose to [A]ccept, [R]eject, or [E]dit");
+            Console.WriteLine($"TransactionId\tNormalized Merchant\tCategory\tRequired Terms\tExcluded Terms\tConfidence\tNotes\tActions");
+            _log.Info($"Starting human review of AI-generated rules");
+
+            var toReturn = new List<MerchantRule>();
+            foreach (var cr in candidateRules)
+            {
+                var associatedTrans = currentBatch.Where(tx => tx.TransactionId == cr.TransactionId).FirstOrDefault();
+                if (associatedTrans == null)
+                {
+                    var errMsg = $"During human review, there is no matching transaction for the proposed merchant rule | PROPOSED RULE TRANS ID: {cr.TransactionId}";
+                    _log.Error(errMsg);
+                    throw new Exception(errMsg);
+                }
+
+                var shouldPromptUserForCurrentRule = true;
+                while (shouldPromptUserForCurrentRule)
+                {
+                    _log.Info($"{cr}");
+                    Console.Write($"{cr} | CHOICE (A/R/E): ");
+                    var choice = Console.ReadKey();
+
+                    if (choice.KeyChar == 'R' || choice.KeyChar == 'r')
+                    {
+                        Console.WriteLine($"PRESS Y TO CONFIRM REJECT OR N TO GO BACK AND CHOOSE A DIFFERENT OPTION.");
+                        var confirmRejectChoice = Console.ReadKey();
+                        if (confirmRejectChoice.KeyChar == 'y' || confirmRejectChoice.KeyChar == 'Y')
+                        {
+                            _log.Info($"TRANS ID: {cr.TransactionId} | CHOICE: Reject");
+                            shouldPromptUserForCurrentRule = false;
+                        }
+                    }
+                    else if (choice.KeyChar == 'E' || choice.KeyChar == 'e')
+                    {
+                        _log.Info($"TRANS ID: {cr.TransactionId} | CHOICE: Edit");
+                        var crToEdit = cr.Clone();
+                        Edit(crToEdit);
+                        BuildMerchantRuleAndApplyToTransaction(fileMeta, toReturn, associatedTrans, crToEdit);
+                        shouldPromptUserForCurrentRule = false;
+                    }
+                    else if (choice.KeyChar == 'a' || choice.KeyChar == 'A')
+                    {
+                        _log.Info($"TRANS ID: {cr.TransactionId} | CHOICE: Accept");
+                        BuildMerchantRuleAndApplyToTransaction(fileMeta, toReturn, associatedTrans, cr);
+                        shouldPromptUserForCurrentRule = false;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Valid choices are A, R, or E");
+                    }
+                }
+            }
+            return toReturn;
+        }
+
+        private static void BuildMerchantRuleAndApplyToTransaction(FileMetaData fileMeta, List<MerchantRule> toReturn, Transaction associatedTrans, MerchantRuleProposal crToEdit)
+        {
+            var mrToAdd = MerchantRule.MappedFrom(crToEdit, fileMeta);
+            toReturn.Add(mrToAdd);
+            associatedTrans.ApplyMerchantRule(mrToAdd);
+            Console.WriteLine();
         }
 
         private static string ExtractCleanAiResponseModelText(string responseJson)
@@ -210,6 +280,140 @@ Payload:
             }
 
             return modelText;
+        }
+
+        private static void Edit(MerchantRuleProposal mrp)
+        {
+            var shouldContinueEditing = true;
+            while (shouldContinueEditing)
+            {
+                Console.WriteLine($"Press the corresponding key to edit a field");
+                Console.WriteLine($"[M] - Normalized Merchant | [C] - Category | [R] - Required Terms | [E] - Excluded Terms | [F] - Confidence | [N] - Notes | [X] - EXIT EDITING");
+                var choice = Console.ReadKey().KeyChar;
+
+                if (choice == 'm' || choice == 'M')
+                {
+                    mrp.NormalizedMerchant = GetNewStringValue("merchant name", mrp.NormalizedMerchant);
+                }
+                else if (choice == 'c' || choice == 'C')
+                {
+                    mrp.Category = GetNewStringValue("category", mrp.Category);
+                }
+                else if (choice == 'r' || choice == 'R')
+                {
+                    mrp.RequiredTerms = GetNewStringValues("required terms", mrp.RequiredTerms);
+                }
+                else if (choice == 'e' || choice == 'E')
+                {
+                    mrp.ExcludedTerms = GetNewStringValues("excluded terms", mrp.ExcludedTerms);
+                }
+                else if (choice == 'f' || choice == 'F')
+                {
+                    mrp.Confidence = GetNewDecimalValue("confidence", mrp.Confidence);
+                }
+                else if (choice == 'n' || choice == 'N')
+                {
+                    mrp.Notes = GetNewStringValue("notes", mrp.Notes);
+                }
+                else if (choice == 'x' || choice == 'X')
+                {
+                    shouldContinueEditing = false;
+                }
+                else
+                {
+                    Console.WriteLine($"INVALID CHOICE. TRY AGAIN.");
+                }
+                /*
+                 * NormalizedMerchant = NormalizedMerchant,
+                Category = Category,
+                RequiredTerms = RequiredTerms,
+                ExcludedTerms = ExcludedTerms,
+                Confidence = Confidence,
+                Notes = Notes
+                 */
+            }
+        }
+
+        private static string GetNewStringValue(string prompt, string? valueToEdit)
+        {
+            var isValid = false;
+            string newValue = string.Empty;
+            valueToEdit = string.IsNullOrWhiteSpace(valueToEdit) ? "[EMPTY]" : valueToEdit;
+            while (!isValid)
+            {
+                Console.Write($"Type in a new {prompt} and press Enter | EXISTING: {valueToEdit} | NEW: ");
+                var userEntry = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(userEntry))
+                {
+                    Console.Write($"New value must not be whitespace. Try again.");
+                }
+                else
+                {
+                    newValue = userEntry;
+                    isValid = true;
+                }
+            }
+            return newValue;
+        }
+
+        private static decimal GetNewDecimalValue(string prompt, decimal? valueToEdit)
+        {
+            var isValid = false;
+            decimal newValue = 0;
+            while (!isValid)
+            {
+                Console.Write($"Type in a new {prompt} and press Enter | EXISTING: {valueToEdit} | NEW: ");
+                var userEntry = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(userEntry))
+                {
+                    Console.Write($"New value must not be whitespace. Try again.");
+                }
+                else
+                {
+                    newValue = decimal.TryParse(userEntry, out newValue) ? newValue : 0;
+                    isValid = true;
+                }
+            }
+            return newValue;
+        }
+
+        private static List<string> GetNewStringValues(string prompt, List<string>? valuesToEdit)
+        {
+            var isValid = false;
+            var finishedEditing = false;
+            var newValues = new List<string>();
+            valuesToEdit = valuesToEdit == null || valuesToEdit.Count == 0 ? ["[EMPTY]"] : valuesToEdit;
+            while (!isValid && !finishedEditing)
+            {
+                Console.Write($"Type in the number next to the {prompt} value to edit and press Enter.");
+                for (int i = 0; i < valuesToEdit.Count; i++)
+                {
+                    Console.WriteLine($"[{i + 1}] - {valuesToEdit[i]}");
+                    newValues.Add(valuesToEdit[i]);
+                }
+                Console.WriteLine($"[X] - EXIT EDITING THIS LIST");
+                var userEntry = Console.ReadLine();
+                if (string.IsNullOrWhiteSpace(userEntry))
+                {
+                    Console.Write($"New value must not be whitespace. Try again.");
+                }
+                else if (userEntry.Equals("x") || userEntry.Equals("X"))
+                {
+                    finishedEditing = true;
+                }
+                else
+                {
+                    int userChoiceInt = int.TryParse(userEntry, out userChoiceInt) ? userChoiceInt : -1;
+                    if (userChoiceInt < 1 || userChoiceInt > newValues.Count)
+                    {
+                        Console.WriteLine($"{userEntry} is invalid. Try again.");
+                        isValid = false;
+                        continue;
+                    }
+                    newValues[userChoiceInt] = userEntry;
+                }
+            }
+            return newValues;
         }
     }
 }
