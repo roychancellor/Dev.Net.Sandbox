@@ -3,6 +3,7 @@
     public class MerchantRule
     {
         public long MerchantRuleId { get; set; }
+        public string MerchantRuleCorrelation { get; set; } = "";
         public string NormalizedMerchant { get; set; } = "";
         public string Domain { get; set; } = "";
         public string AccountType { get; set; } = "";
@@ -33,6 +34,7 @@
                 Confidence = mrp.Confidence ?? 1,
                 IsActive = true,
                 CreatedAt = DateTime.Now,
+                MerchantRuleCorrelation = mrp.MerchantRuleCorrelation,
             };
         }
     }

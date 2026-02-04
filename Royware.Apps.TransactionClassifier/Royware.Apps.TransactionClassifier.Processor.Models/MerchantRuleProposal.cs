@@ -14,19 +14,10 @@ namespace Royware.Apps.TransactionClassifier.Processor.Models
         public List<string> ExcludedTerms { get; set; } = [];
         public decimal? Confidence { get; set; }
         public string? Notes { get; set; }
+        public string MerchantRuleCorrelation { get; set; } = "";
 
         public override string ToString()
         {
-            /*
-             * TransactionId
-Normalized Merchant
-Category
-Required Terms
-Excluded Terms
-Confidence
-Notes
-Actions
-             */
             var sb = new StringBuilder();
             sb.Append($"{TransactionId} | {NormalizedMerchant} | {Category} | {string.Join(',', RequiredTerms)} | {string.Join(',', ExcludedTerms)} | {Confidence} | {Notes}");
             return sb.ToString();
@@ -42,7 +33,8 @@ Actions
                 RequiredTerms = [.. RequiredTerms],
                 ExcludedTerms = [.. ExcludedTerms],
                 Confidence = Confidence,
-                Notes = Notes?.Clone() as string ?? ""
+                Notes = Notes?.Clone() as string ?? "",
+                MerchantRuleCorrelation = MerchantRuleCorrelation?.Clone() as string ?? "",
             };
         }
     }

@@ -5,5 +5,6 @@ namespace Royware.Apps.TransactionClassifier.Processor.LogicCompareTransactionsT
     public interface IMerchantRuleTransactionMatcher
     {
         MerchantRule? MatchTransactionToRule(Transaction tx, List<MerchantRule> rules);
+        MerchantRule? GetBestRule(Transaction tx, IEnumerable<MerchantRule> rules);
     }
 }

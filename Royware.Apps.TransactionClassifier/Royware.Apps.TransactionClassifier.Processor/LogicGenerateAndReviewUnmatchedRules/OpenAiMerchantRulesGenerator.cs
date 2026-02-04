@@ -1,12 +1,10 @@
 ﻿using Microsoft.Extensions.Options;
-using Microsoft.Identity.Client;
 using NLog;
 using Royware.Apps.TransactionClassifier.Logging;
 using Royware.Apps.TransactionClassifier.Processor.LogicGenerateUnmatchedRules;
 using Royware.Apps.TransactionClassifier.Processor.Models;
 using Royware.Apps.TransactionClassifier.Providers.ApplicationSettings;
 using System.Net.Http.Headers;
-using System.Reflection.Metadata.Ecma335;
 using System.Text;
 using System.Text.Json;
 
@@ -15,7 +13,7 @@ namespace Royware.Apps.TransactionClassifier.Processor.LogicGenerateAndReviewUnm
     public class OpenAiMerchantRulesGenerator : IMerchantRulesGeneration
     {
         private static readonly Logger _log = Loggers.Batch;
-        
+
         private static readonly JsonSerializerOptions _propertyNameCaseInsensitiveCamelCase = new()
         {
             PropertyNameCaseInsensitive = true,
@@ -156,7 +154,7 @@ Payload:
                 var errorBody = await response.Content.ReadAsStringAsync(cancellationToken);
                 throw new InvalidOperationException($"OpenAI call failed ({response.StatusCode}): {errorBody}");
             }
-            
+
             var responseAsJson = await response.Content.ReadAsStringAsync(cancellationToken);
             var cleanModelText = ExtractCleanAiResponseModelText(responseAsJson);
 
@@ -165,9 +163,17 @@ Payload:
             return proposedMerchantRules ?? [];
         }
 
-        public List<MerchantRule> HumanReview(List<MerchantRuleProposal> candidateRules, FileMetaData fileMeta, List<Transaction> currentBatch)
+        public void AssignCorrelations(List<MerchantRuleProposal> toAssign)
         {
-            if (candidateRules.Count == 0)
+            foreach (var mrp in toAssign)
+            {
+                mrp.MerchantRuleCorrelation = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            }
+        }
+
+        public List<MerchantRule> HumanReview(List<MerchantRuleProposal> proposedRules, FileMetaData fileMeta, List<Transaction> currentBatch)
+        {
+            if (proposedRules.Count == 0)
             {
                 return [];
             }
@@ -177,12 +183,12 @@ Payload:
             _log.Info($"Starting human review of AI-generated rules");
 
             var toReturn = new List<MerchantRule>();
-            foreach (var cr in candidateRules)
+            foreach (var pr in proposedRules)
             {
-                var associatedTrans = currentBatch.Where(tx => tx.TransactionId == cr.TransactionId).FirstOrDefault();
+                var associatedTrans = currentBatch.Where(tx => tx.TransactionId == pr.TransactionId).FirstOrDefault();
                 if (associatedTrans == null)
                 {
-                    var errMsg = $"During human review, there is no matching transaction for the proposed merchant rule | PROPOSED RULE TRANS ID: {cr.TransactionId}";
+                    var errMsg = $"During human review, there is no matching transaction for the proposed merchant rule | PROPOSED RULE TRANS ID: {pr.TransactionId}";
                     _log.Error(errMsg);
                     throw new Exception(errMsg);
                 }
@@ -190,8 +196,8 @@ Payload:
                 var shouldPromptUserForCurrentRule = true;
                 while (shouldPromptUserForCurrentRule)
                 {
-                    _log.Info($"{cr}");
-                    Console.Write($"{cr} | CHOICE (A/R/E): ");
+                    _log.Info($"{pr}");
+                    Console.Write($"{pr} | CHOICE (A/R/E): ");
                     var choice = Console.ReadKey();
 
                     if (choice.KeyChar == 'R' || choice.KeyChar == 'r')
@@ -200,22 +206,22 @@ Payload:
                         var confirmRejectChoice = Console.ReadKey();
                         if (confirmRejectChoice.KeyChar == 'y' || confirmRejectChoice.KeyChar == 'Y')
                         {
-                            _log.Info($"TRANS ID: {cr.TransactionId} | CHOICE: Reject");
+                            _log.Info($"TRANS ID: {pr.TransactionId} | CHOICE: Reject");
                             shouldPromptUserForCurrentRule = false;
                         }
                     }
                     else if (choice.KeyChar == 'E' || choice.KeyChar == 'e')
                     {
-                        _log.Info($"TRANS ID: {cr.TransactionId} | CHOICE: Edit");
-                        var crToEdit = cr.Clone();
-                        Edit(crToEdit);
-                        BuildMerchantRuleAndApplyToTransaction(fileMeta, toReturn, associatedTrans, crToEdit);
+                        _log.Info($"TRANS ID: {pr.TransactionId} | CHOICE: Edit");
+                        var prToEdit = pr.Clone();
+                        Edit(prToEdit);
+                        BuildMerchantRule(fileMeta, toReturn, associatedTrans, prToEdit);
                         shouldPromptUserForCurrentRule = false;
                     }
                     else if (choice.KeyChar == 'a' || choice.KeyChar == 'A')
                     {
-                        _log.Info($"TRANS ID: {cr.TransactionId} | CHOICE: Accept");
-                        BuildMerchantRuleAndApplyToTransaction(fileMeta, toReturn, associatedTrans, cr);
+                        _log.Info($"TRANS ID: {pr.TransactionId} | CHOICE: Accept");
+                        BuildMerchantRule(fileMeta, toReturn, associatedTrans, pr);
                         shouldPromptUserForCurrentRule = false;
                     }
                     else
@@ -227,11 +233,10 @@ Payload:
             return toReturn;
         }
 
-        private static void BuildMerchantRuleAndApplyToTransaction(FileMetaData fileMeta, List<MerchantRule> toReturn, Transaction associatedTrans, MerchantRuleProposal crToEdit)
+        private static void BuildMerchantRule(FileMetaData fileMeta, List<MerchantRule> toReturn, Transaction associatedTrans, MerchantRuleProposal crToEdit)
         {
             var mrToAdd = MerchantRule.MappedFrom(crToEdit, fileMeta);
             toReturn.Add(mrToAdd);
-            associatedTrans.ApplyMerchantRule(mrToAdd);
             Console.WriteLine();
         }
 

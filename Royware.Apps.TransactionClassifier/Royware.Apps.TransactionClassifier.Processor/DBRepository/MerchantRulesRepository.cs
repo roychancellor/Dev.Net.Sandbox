@@ -39,6 +39,7 @@ namespace Royware.Apps.TransactionClassifier.Processor.DBRepository
             dt.Columns.Add(nameof(MerchantRule.Confidence), typeof(double));
             dt.Columns.Add(nameof(MerchantRule.IsActive), typeof(byte));
             dt.Columns.Add(nameof(MerchantRule.CreatedAt), typeof(DateTime));
+            dt.Columns.Add(nameof(MerchantRule.MerchantRuleCorrelation), typeof(string));
 
             foreach (var mr in merchantRules)
             {
@@ -51,7 +52,8 @@ namespace Royware.Apps.TransactionClassifier.Processor.DBRepository
                             mr.Priority,
                             mr.Confidence,
                             1,
-                            DateTime.Now);
+                            DateTime.Now,
+                            mr.MerchantRuleCorrelation);
             }
 
             var tvp = new DynamicParameters();

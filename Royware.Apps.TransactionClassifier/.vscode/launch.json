@@ -1,0 +1,15 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "TransactionClassifier (.NET 10)",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build",
+      "program": "${workspaceFolder}/Royware.Apps.TransactionClassifier/bin/Debug/net10.0/Royware.Apps.TransactionClassifier.dll",
+      "cwd": "${workspaceFolder}/Royware.Apps.TransactionClassifier/bin/Debug/net10.0",
+      "stopAtEntry": false,
+      "console": "externalTerminal"
+    }
+  ]
+}

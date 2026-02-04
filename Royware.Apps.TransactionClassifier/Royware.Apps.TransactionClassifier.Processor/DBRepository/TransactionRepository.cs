@@ -96,15 +96,17 @@ namespace Royware.Apps.TransactionClassifier.Processor.DBRepository
         {
             var dt = new DataTable();
             dt.Columns.Add(nameof(Transaction.TransactionId), typeof(long));
+            dt.Columns.Add(nameof(Transaction.MatchedRuleCorrelation), typeof(string));
             dt.Columns.Add(nameof(Transaction.ResolvedMerchant), typeof(string));
-            dt.Columns.Add(nameof(Transaction.MatchedRuleId), typeof(int));
+            dt.Columns.Add(nameof(Transaction.Category), typeof(string));
             dt.Columns.Add(nameof(Transaction.IsResolved), typeof(bool));
 
             foreach (var t in transactions)
             {
                 dt.Rows.Add(t.TransactionId,
+                            t.MatchedRuleCorrelation,
                             t.ResolvedMerchant,
-                            t.MatchedRuleId,
+                            t.Category,
                             t.IsResolved);
             }
 

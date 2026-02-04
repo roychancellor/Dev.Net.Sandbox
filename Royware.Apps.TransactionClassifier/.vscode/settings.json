@@ -1,0 +1,15 @@
+{
+  "dotnet.server.useOmnisharp": false,
+  "csharp.semanticHighlighting.enabled": true,
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "always"
+  },
+  "files.exclude": {
+    "**/bin": true,
+    "**/obj": true
+  },
+  "editor.rulers": [
+    120
+  ]
+}
